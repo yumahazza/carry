@@ -16,4 +16,19 @@ model Car {
   isAvailable Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  bookings    Booking[]
+}
+
+model Booking {
+  id            String   @id @default(uuid())
+  customerName  String
+  customerPhone String
+  startDate     DateTime
+  endDate       DateTime
+  totalPrice    Int
+  status        String   @default("PENDING")
+  carId         String
+  car           Car      @relation(fields: [carId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }

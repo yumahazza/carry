@@ -3,40 +3,63 @@ import { NextResponse } from 'next/server';
 
 const prisma = new PrismaClient();
 
-// GET: Mengambil semua data mobil
-export async function GET() {
+// GET: Mengambil daftar mobil (dengan fitur Search & Filter)
+export async function GET(request: Request) {
   try {
-    const cars = await prisma.car.findMany();
+    const { searchParams } = new URL(request.url);
+    const search = searchParams.get('search') || '';
+    const availableParam = searchParams.get('available');
+
+    const where: any = {};
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { brand: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    if (availableParam === 'true') {
+      where.isAvailable = true;
+    } else if (availableParam === 'false') {
+      where.isAvailable = false;
+    }
+
+    const cars = await prisma.car.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+    });
+
     return NextResponse.json(cars);
   } catch (error) {
+    console.error('Error fetching cars:', error);
     return NextResponse.json(
-      { error: 'Gagal mengambil data mobil' },
+      { error: 'Gagal mengambil data mobil' }, // Perhatikan: 'data mobil', bukan 'detail'
       { status: 500 }
     );
   }
 }
 
-// POST: Menambah data mobil baru
+// POST: Menambah mobil baru
 export async function POST(request: Request) {
   try {
-    // 1. Ambil data JSON yang dikirim dari body request
     const body = await request.json();
-
-    // 2. Simpan ke database menggunakan Prisma
+    
     const newCar = await prisma.car.create({
       data: {
         name: body.name,
         brand: body.brand,
-        year: body.year,
-        pricePerDay: body.pricePerDay,
+        year: parseInt(body.year),
+        pricePerDay: parseInt(body.pricePerDay),
+        isAvailable: true,
       },
     });
-
-    // 3. Kembalikan data mobil yang baru dibuat
+    
     return NextResponse.json(newCar, { status: 201 });
   } catch (error) {
+    console.error('Error creating car:', error);
     return NextResponse.json(
-      { error: 'Gagal menambah mobil' },
+      { error: 'Gagal menambahkan mobil' },
       { status: 500 }
     );
   }

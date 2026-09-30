@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 
 // Daftar halaman yang WAJIB login untuk mengaksesnya
-const protectedRoutes = ['/bookings'];
+const protectedRoutes = ['/bookings', '/my-bookings'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

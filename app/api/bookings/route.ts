@@ -47,18 +47,19 @@ export async function POST(request: Request) {
     const end = new Date(endDate);
     const diffTime = Math.abs(end.getTime() - start.getTime());
     let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    if (diffDays < 1) diffDays = 1; 
+    if (diffDays < 1) diffDays = 1;
 
     const totalPrice = diffDays * car.pricePerDay;
 
     const newBooking = await prisma.booking.create({
       data: {
-        carId,
-        customerName,
-        customerPhone: customerPhone || '-',
-        startDate: start,
-        endDate: end,
-        totalPrice,
+        customerName: body.customerName,
+        customerPhone: body.customerPhone,
+        customerEmail: body.customerEmail, // <-- PASTIKAN INI ADA
+        startDate: new Date(body.startDate),
+        endDate: new Date(body.endDate),
+        totalPrice: body.totalPrice,
+        carId: body.carId,
         status: 'PENDING',
       },
     });

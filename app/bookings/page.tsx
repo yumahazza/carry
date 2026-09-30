@@ -35,6 +35,15 @@ export default function BookingsPage() {
         }
     };
 
+    const handleLogout = async () => {
+        try {
+            await fetch('/api/auth/logout', { method: 'POST' });
+            window.location.href = '/login'; // Redirect manual setelah cookie terhapus
+        } catch (error) {
+            console.error('Gagal logout:', error);
+        }
+    };
+
     useEffect(() => {
         fetchBookings();
     }, []);
@@ -85,12 +94,35 @@ export default function BookingsPage() {
         <main style={{ padding: '2rem', fontFamily: 'sans-serif', maxWidth: '1200px', margin: '0 auto', color: '#f3f4f6' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                 <h1 style={{ margin: 0 }}>📋 Daftar Booking Masuk</h1>
-                <Link
-                    href="/cars"
-                    style={{ padding: '0.5rem 1rem', backgroundColor: '#313030', color: '#f3f4f6', textDecoration: 'none', borderRadius: '6px', fontWeight: 'bold', border: '1px solid #555' }}
-                >
-                    ← Kembali ke Daftar Mobil
-                </Link>
+
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                    <Link
+                        href="/cars"
+                        style={{ padding: '0.5rem 1rem', backgroundColor: '#313030', color: '#f3f4f6', textDecoration: 'none', borderRadius: '6px', fontWeight: 'bold', border: '1px solid #555' }}
+                    >
+                        ← Lihat Mobil
+                    </Link>
+
+                    {/* --- TAMBAHKAN TOMBOL LOGOUT INI --- */}
+                    <button
+                        onClick={handleLogout}
+                        style={{
+                            padding: '0.5rem 1rem',
+                            backgroundColor: '#f87171', // Warna Danger sesuai DSG
+                            color: '#000',
+                            border: 'none',
+                            borderRadius: '6px',
+                            fontWeight: 'bold',
+                            cursor: 'pointer',
+                            transition: 'background-color 0.2s'
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#ef4444')}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#f87171')}
+                    >
+                        🚪 Logout
+                    </button>
+                    {/* ------------------------------------ */}
+                </div>
             </div>
 
             {loading ? (

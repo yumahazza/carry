@@ -2,39 +2,48 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 
-// Daftar halaman yang WAJIB login untuk mengaksesnya
-const protectedRoutes = ['/bookings', '/my-bookings'];
-
+// UBAH NAMA FUNGSI DARI 'middleware' MENJADI 'proxy'
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const token = request.cookies.get('token')?.value;
 
-  // Cek apakah halaman yang diakses ada di daftar protected
-  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
+  // 1. Jika tidak ada token sama sekali, tendang ke login untuk halaman yang butuh auth
+  if (!token && (pathname.startsWith('/bookings') || pathname.startsWith('/my-bookings'))) {
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
 
-  if (isProtectedRoute) {
-    // Ambil token dari cookie
-    const token = request.cookies.get('token')?.value;
+  // 2. Verifikasi token jika ada
+  let payload: any = null;
+  if (token) {
+    payload = await verifyToken(token);
+  }
 
-    if (!token) {
-      // Kalau nggak ada token, tendang ke login
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
+  // 3. Jika token tidak valid (misal expired atau dimanipulasi), hapus cookie dan tendang ke login
+  if (!payload && token) {
+    const response = NextResponse.redirect(new URL('/login', request.url));
+    response.cookies.delete('token');
+    return response;
+  }
 
-    // Verifikasi apakah token masih valid (belum expired & signature cocok)
-    const payload = await verifyToken(token);
-    if (!payload) {
-      // Kalau token invalid/expired, hapus cookie dan tendang ke login
-      const response = NextResponse.redirect(new URL('/login', request.url));
-      response.cookies.delete('token');
-      return response;
+  // 4. Proteksi Halaman ADMIN (Hanya role 'ADMIN' yang boleh akses)
+  if (pathname.startsWith('/bookings')) {
+    if (payload?.role !== 'ADMIN') {
+      // Bukan admin? Tendang ke halaman customer
+      return NextResponse.redirect(new URL('/my-bookings', request.url));
     }
   }
 
-  // Kalau aman, lanjutkan request seperti biasa
+  // 5. Proteksi Halaman CUSTOMER (Harus login, role bebas asal punya token valid)
+  if (pathname.startsWith('/my-bookings')) {
+    if (!payload) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+  }
+
+  // Kalau semua aman, lanjutkan request
   return NextResponse.next();
 }
 
-// Konfigurasi agar middleware hanya berjalan di path tertentu (opsional, tapi bagus untuk performa)
 export const config = {
-  matcher: ['/bookings/:path*'],
+  matcher: ['/bookings/:path*', '/my-bookings/:path*'],
 };

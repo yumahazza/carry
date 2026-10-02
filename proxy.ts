@@ -5,7 +5,7 @@ import { verifyToken } from '@/lib/auth';
 // Daftar halaman yang WAJIB login untuk mengaksesnya
 const protectedRoutes = ['/bookings', '/my-bookings'];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Cek apakah halaman yang diakses ada di daftar protected

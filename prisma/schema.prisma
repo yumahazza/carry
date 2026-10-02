@@ -20,18 +20,18 @@ model Car {
 }
 
 model Booking {
-  id             String   @id @default(uuid())
-  customerName   String
-  customerPhone  String
-  customerEmail  String?
-  startDate      DateTime
-  endDate        DateTime
-  totalPrice     Float
-  status         String   @default("PENDING")
-  carId          String
-  car            Car      @relation(fields: [carId], references: [id])
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id            String   @id @default(uuid())
+  customerName  String
+  customerPhone String
+  startDate     DateTime
+  endDate       DateTime
+  totalPrice    Int
+  status        String   @default("PENDING")
+  carId         String
+  car           Car      @relation(fields: [carId], references: [id])
+  userId        String   // BARU! Untuk tracking siapa yang booking
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model User {

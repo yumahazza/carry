@@ -65,6 +65,8 @@ export default function CarDetailPage() {
   }, [bookingData.startDate, bookingData.endDate, car]);
 
   // Handler Submit Booking
+  const MOCK_USER_ID = 'user-123';
+  
   const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsBooking(true);
@@ -76,6 +78,7 @@ export default function CarDetailPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           carId: car?.id,
+          userId: MOCK_USER_ID,
           ...bookingData,
         }),
       });

@@ -48,21 +48,19 @@ export default function BookingsPage() {
         fetchBookings();
     }, []);
 
-    // Handler saat dropdown status diubah
+    // Fungsi untuk handle perubahan status
     const handleStatusChange = async (bookingId: string, newStatus: string) => {
-        try {
-            const res = await fetch(`/api/bookings/${bookingId}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: newStatus }),
-            });
-            if (res.ok) {
-                await fetchBookings(); // Refresh data setelah update
-            } else {
-                alert('Gagal mengubah status');
-            }
-        } catch (error) {
-            console.error('Error:', error);
+        const res = await fetch(`/api/bookings/${bookingId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: newStatus }),
+        });
+
+        if (res.ok) {
+            // Refresh tabel setelah status berubah
+            fetchBookings();
+        } else {
+            alert('Gagal mengubah status');
         }
     };
 
@@ -186,19 +184,19 @@ export default function BookingsPage() {
                                                 value={booking.status}
                                                 onChange={(e) => handleStatusChange(booking.id, e.target.value)}
                                                 style={{
-                                                    padding: '0.4rem',
+                                                    padding: '0.4rem 0.8rem',
                                                     borderRadius: '6px',
-                                                    border: '1px solid #555555',
+                                                    border: '1px solid #555',
                                                     backgroundColor: '#1f1f1f',
                                                     color: '#f3f4f6',
-                                                    fontSize: '0.85rem',
+                                                    fontWeight: 'bold',
                                                     cursor: 'pointer'
                                                 }}
                                             >
                                                 <option value="PENDING">PENDING</option>
                                                 <option value="CONFIRMED">CONFIRMED</option>
-                                                <option value="CANCELLED">CANCELLED</option>
                                                 <option value="COMPLETED">COMPLETED</option>
+                                                <option value="CANCELLED">CANCELLED</option>
                                             </select>
                                         </div>
                                     </td>

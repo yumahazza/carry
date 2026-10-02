@@ -28,7 +28,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { carId, customerName, customerPhone, customerEmail, startDate, endDate } = body;
+    const { carId, customerName, customerPhone, startDate, endDate, userId } = body;
 
     // 1. Validasi data wajib
     if (!carId || !customerName || !startDate || !endDate) {
@@ -65,11 +65,11 @@ export async function POST(request: Request) {
         carId,
         customerName,
         customerPhone: customerPhone || '-',
-        customerEmail: customerEmail || null, // Handle jika undefined
         startDate: start,
         endDate: end,
-        totalPrice, // <-- PASTIKAN INI ADA!
+        totalPrice,
         status: 'PENDING',
+        userId: userId || 'guest-user',
       },
     });
 

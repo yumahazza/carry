@@ -86,7 +86,7 @@ export default function Navbar() {
 
                             {/* Link berdasarkan Role */}
                             {user.role === 'ADMIN' ? (
-                                <Link href="/bookings" style={{ color: '#d1d5db', textDecoration: 'none', fontSize: '0.95rem', fontWeight: '500' }}>
+                                <Link href="/admin" style={{ color: '#d1d5db', textDecoration: 'none', fontSize: '0.95rem', fontWeight: '500' }}>
                                     Dashboard Admin
                                 </Link>
                             ) : (

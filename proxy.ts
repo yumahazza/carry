@@ -26,9 +26,8 @@ export async function proxy(request: NextRequest) {
   }
 
   // 4. Proteksi Halaman ADMIN (Hanya role 'ADMIN' yang boleh akses)
-  if (pathname.startsWith('/bookings')) {
+  if (pathname.startsWith('/bookings') || pathname.startsWith('/admin')) {
     if (payload?.role !== 'ADMIN') {
-      // Bukan admin? Tendang ke halaman customer
       return NextResponse.redirect(new URL('/my-bookings', request.url));
     }
   }
@@ -47,3 +46,4 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: ['/bookings/:path*', '/my-bookings/:path*'],
 };
+

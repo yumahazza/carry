@@ -24,19 +24,18 @@ export async function PATCH(
       data: { status },
     });
 
-    // 2. 🔥 LOGIKA KUNCI: Update ketersediaan mobil
-    // Aturan: 
-    // - CONFIRMED = Mobil dikunci (Tidak Tersedia)
-    // - CANCELLED / COMPLETED = Mobil LANGSUNG dilepas (Tersedia), TIDAK PEDULI TANGGAL!
+    // 2. 🔥 LOGIKA KUNCI: Update ketersediaan mobil berdasarkan status
     if (status === 'CONFIRMED') {
+      // Jika dikonfirmasi, mobil dikunci (Tidak Tersedia)
       await prisma.car.update({
         where: { id: updatedBooking.carId },
         data: { isAvailable: false },
       });
     } else if (status === 'CANCELLED' || status === 'COMPLETED') {
+      // Jika dibatalkan ATAU SELESAI, mobil LANGSUNG dilepas (Tersedia)
       await prisma.car.update({
         where: { id: updatedBooking.carId },
-        data: { isAvailable: true }, // Langsung tersedia kembali!
+        data: { isAvailable: true },
       });
     }
 

@@ -26,15 +26,14 @@ export async function GET(request: Request) {
     }
 
     const cars = await prisma.car.findMany({
-      where,
       orderBy: { createdAt: 'desc' },
     });
-
     return NextResponse.json(cars);
+
   } catch (error) {
     console.error('Error fetching cars:', error);
     return NextResponse.json(
-      { error: 'Gagal mengambil data mobil' }, // Perhatikan: 'data mobil', bukan 'detail'
+      { error: 'Gagal mengambil data mobil' },
       { status: 500 }
     );
   }

@@ -3,7 +3,6 @@ import { NextResponse } from 'next/server';
 
 const prisma = new PrismaClient();
 
-// PATCH: Mengupdate status booking
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -13,7 +12,7 @@ export async function PATCH(
     const body = await request.json();
     const { status } = body;
 
-    // Validasi status agar tidak sembarangan
+    // Validasi status
     const validStatuses = ['PENDING', 'CONFIRMED', 'CANCELLED', 'COMPLETED'];
     if (!validStatuses.includes(status)) {
       return NextResponse.json({ error: 'Status tidak valid' }, { status: 400 });
@@ -25,16 +24,19 @@ export async function PATCH(
       data: { status },
     });
 
-    // 2. Logika otomatis untuk update ketersediaan mobil
+    // 2. 🔥 LOGIKA KUNCI: Update ketersediaan mobil
+    // Aturan: 
+    // - CONFIRMED = Mobil dikunci (Tidak Tersedia)
+    // - CANCELLED / COMPLETED = Mobil LANGSUNG dilepas (Tersedia), TIDAK PEDULI TANGGAL!
     if (status === 'CONFIRMED') {
       await prisma.car.update({
         where: { id: updatedBooking.carId },
-        data: { isAvailable: false }, // Mobil jadi tidak tersedia
+        data: { isAvailable: false },
       });
-    } else if (status === 'CANCELLED') {
+    } else if (status === 'CANCELLED' || status === 'COMPLETED') {
       await prisma.car.update({
         where: { id: updatedBooking.carId },
-        data: { isAvailable: true }, // Mobil jadi tersedia lagi
+        data: { isAvailable: true }, // Langsung tersedia kembali!
       });
     }
 

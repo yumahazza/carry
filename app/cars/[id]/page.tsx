@@ -97,20 +97,26 @@ export default function CarDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex h-[70vh] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#474dec] border-t-transparent"></div>
+      <div aria-label="Memuat detail mobil" aria-live="polite" className="page-container py-10 sm:py-14">
+        <div className="grid gap-6 lg:grid-cols-12">
+          <div className="skeleton aspect-[16/10] rounded-2xl lg:col-span-7" />
+          <div className="space-y-4 lg:col-span-5">
+            <div className="skeleton h-28 rounded-xl" />
+            <div className="skeleton h-72 rounded-2xl" />
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!car) {
     return (
-      <div className="mx-auto max-w-7xl px-6 py-32 text-center">
-        <h1 className="text-2xl font-bold tracking-tight text-white mb-2">Mobil Tidak Ditemukan</h1>
-        <p className="text-sm text-[#aaaaaa] mb-6">Armada yang Anda cari tidak tersedia atau telah dihapus.</p>
+      <div className="page-container py-16 text-center sm:py-24">
+        <h1 className="mb-2 text-2xl font-bold tracking-tight text-primary">Mobil Tidak Ditemukan</h1>
+        <p className="mb-6 text-sm text-secondary">Armada yang Anda cari tidak tersedia atau telah dihapus.</p>
         <Link
           href="/cars"
-          className="inline-flex items-center px-4 py-2 bg-[#474dec] text-white rounded-md text-xs font-semibold hover:bg-[#3a39e0] transition-colors"
+          className="btn-primary"
         >
           &larr; Kembali ke Daftar Mobil
         </Link>
@@ -122,18 +128,18 @@ export default function CarDetailPage() {
   const defaultImage = "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1200&q=80";
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-6 pt-28 pb-16">
+    <div className="page-container-wide py-8 sm:py-10">
       {/* Breadcrumb */}
-      <div className="mb-8 flex items-center gap-2 text-xs text-[#aaaaaa]">
-        <Link href="/cars" className="hover:text-white transition-colors">Daftar Mobil</Link>
-        <span className="text-[#666666]">/</span>
-        <span className="text-[#f3f4f6] font-medium">{car.name}</span>
-      </div>
+      <nav aria-label="Breadcrumb" className="mb-6 flex min-w-0 items-center gap-2 text-sm text-muted">
+        <Link href="/cars" className="min-h-10 inline-flex items-center text-secondary transition-colors hover:text-primary hover:underline hover:underline-offset-4">Fleet</Link>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page" className="truncate font-medium text-primary">{car.name}</span>
+      </nav>
 
-      <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-8">
         {/* LEFT COLUMN: Image & Specs (7 cols) */}
-        <div className="space-y-6 lg:col-span-7">
-          <div className="aspect-[16/10] overflow-hidden rounded-xl border border-white/5 bg-[#1f1f1f]">
+        <div className="space-y-5 lg:col-span-7">
+          <div className="aspect-[16/10] overflow-hidden rounded-2xl border border-border-subtle bg-surface-raised">
             <img 
               src={car.image || defaultImage} 
               alt={car.name} 
@@ -142,101 +148,103 @@ export default function CarDetailPage() {
           </div>
           
           {/* Specs Grid */}
-          <div className="grid grid-cols-3 gap-3">
-            <div className="rounded-xl border border-white/5 bg-[#1f1f1f] p-4 text-center">
-              <p className="text-xs font-medium text-[#aaaaaa] uppercase tracking-wider mb-1">Seats</p>
-              <p className="text-base font-bold text-white">{car.seats || '5'} Kursi</p>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className="surface-card p-4">
+              <p className="mb-1 text-xs font-semibold uppercase tracking-[0.08em] text-muted">Seats</p>
+              <p className="text-sm font-semibold text-primary">{car.seats || '5'} Kursi</p>
             </div>
-            <div className="rounded-xl border border-white/5 bg-[#1f1f1f] p-4 text-center">
-              <p className="text-xs font-medium text-[#aaaaaa] uppercase tracking-wider mb-1">Transmission</p>
-              <p className="text-base font-bold text-white">{car.transmission || 'Automatic'}</p>
+            <div className="surface-card p-4">
+              <p className="mb-1 text-xs font-semibold uppercase tracking-[0.08em] text-muted">Transmission</p>
+              <p className="text-sm font-semibold text-primary">{car.transmission || 'Automatic'}</p>
             </div>
-            <div className="rounded-xl border border-white/5 bg-[#1f1f1f] p-4 text-center">
-              <p className="text-xs font-medium text-[#aaaaaa] uppercase tracking-wider mb-1">Fuel</p>
-              <p className="text-base font-bold text-white">{car.fuel || 'Bensin'}</p>
+            <div className="surface-card p-4">
+              <p className="mb-1 text-xs font-semibold uppercase tracking-[0.08em] text-muted">Fuel</p>
+              <p className="text-sm font-semibold text-primary">{car.fuel || 'Bensin'}</p>
             </div>
           </div>
 
-          <div className="rounded-xl border border-white/5 bg-[#1f1f1f] p-6 space-y-3">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-[#aaaaaa]">Deskripsi Kendaraan</h2>
-            <p className="text-sm text-[#cccccc] leading-relaxed">
+          <div className="surface-card space-y-3 p-5 sm:p-6">
+            <h2 className="text-base font-semibold text-primary">Deskripsi Kendaraan</h2>
+            <p className="max-w-[65ch] text-sm leading-relaxed text-secondary">
               {car.description || `Kendaraan ${car.name} tahun ${car.year} dari ${car.brand} menawarkan kenyamanan berkendara terbaik dengan performa optimal, efisiensi bahan bakar, serta fitur keselamatan terkini untuk perjalanan Anda.`}
             </p>
           </div>
         </div>
 
         {/* RIGHT COLUMN: Details & Booking (5 cols) */}
-        <div className="space-y-6 lg:col-span-5">
-          <div className="rounded-xl border border-white/5 bg-[#1f1f1f] p-6">
-            <div className="flex items-start justify-between gap-3 mb-2">
+        <div className="space-y-5 lg:col-span-5">
+          <div className="surface-card p-5 sm:p-6">
+            <div className="mb-2 flex items-start justify-between gap-3">
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">{car.name}</h1>
-                <p className="text-xs text-[#aaaaaa] mt-1">{car.brand} • Tahun {car.year}</p>
+                <h1 className="text-2xl font-bold tracking-tight text-primary sm:text-3xl">{car.name}</h1>
+                <p className="mt-1 text-sm text-secondary">{car.brand} • Tahun {car.year}</p>
               </div>
-              <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium border ${
-                car.isAvailable ? 'bg-[#4ade80]/10 text-[#4ade80] border-[#4ade80]/20' : 'bg-[#f87171]/10 text-[#f87171] border-[#f87171]/20'
+              <span className={`status-badge ${
+                car.isAvailable ? 'status-success' : 'status-danger'
               }`}>
-                {car.isAvailable ? 'Tersedia' : 'Disewa'}
+                {car.isAvailable ? 'Available' : 'Rented'}
               </span>
             </div>
           </div>
 
           {/* Booking Card */}
-          <div className="rounded-xl border border-white/10 bg-[#1a1a1a] p-6 space-y-5">
-            <div className="flex items-baseline justify-between border-b border-white/5 pb-4">
+          <div className="space-y-5 rounded-2xl border border-border-default bg-surface-raised p-5 sm:p-6 lg:sticky lg:top-24">
+            <div className="flex items-baseline justify-between border-b border-border-subtle pb-4">
               <div>
-                <p className="text-xs font-medium text-[#aaaaaa] uppercase tracking-wider mb-1">Harga Sewa</p>
+                <p className="mb-1 text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Harga Sewa</p>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-2xl font-bold tracking-tight text-white">
+                  <span className="tabular-nums text-2xl font-bold tracking-tight text-primary">
                     Rp {car.pricePerDay.toLocaleString('id-ID')}
                   </span>
-                  <span className="text-xs text-[#aaaaaa]">/ hari</span>
+                  <span className="text-sm text-muted">/ hari</span>
                 </div>
               </div>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="text-xs font-medium text-[#aaaaaa] uppercase tracking-wider mb-2 block">
+                <label htmlFor="start-date" className="field-label">
                   Tanggal Mulai
                 </label>
                 <input 
+                  id="start-date"
                   type="date" 
                   value={startDate} 
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full bg-[#1f1f1f] border border-white/10 rounded-md px-3.5 py-2.5 text-sm text-[#f3f4f6] focus:outline-none focus:border-[#474dec] focus:ring-2 focus:ring-[#474dec]/50 transition-all"
+                  className="field-control"
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-[#aaaaaa] uppercase tracking-wider mb-2 block">
+                <label htmlFor="end-date" className="field-label">
                   Tanggal Selesai
                 </label>
                 <input 
+                  id="end-date"
                   type="date" 
                   value={endDate} 
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full bg-[#1f1f1f] border border-white/10 rounded-md px-3.5 py-2.5 text-sm text-[#f3f4f6] focus:outline-none focus:border-[#474dec] focus:ring-2 focus:ring-[#474dec]/50 transition-all"
+                  className="field-control"
                 />
               </div>
             </div>
 
             {error && (
-              <div className="text-xs text-[#f87171] bg-[#f87171]/10 border border-[#f87171]/20 rounded-md px-3.5 py-2.5">
+              <div role="alert" className="rounded-xl border border-[rgba(251,113,133,0.28)] bg-[rgba(251,113,133,0.12)] px-4 py-3 text-sm text-danger">
                 {error}
               </div>
             )}
 
             {total > 0 && (
-              <div className="flex items-center justify-between pt-3 border-t border-white/5">
-                <span className="text-xs font-medium text-[#aaaaaa] uppercase tracking-wider">Estimasi Total</span>
-                <span className="text-xl font-bold text-white">Rp {total.toLocaleString('id-ID')}</span>
+              <div className="flex items-center justify-between border-t border-border-subtle pt-4">
+                <span className="text-sm font-medium text-secondary">Estimasi Total</span>
+                <span className="tabular-nums text-lg font-bold text-primary">Rp {total.toLocaleString('id-ID')}</span>
               </div>
             )}
 
             <button 
               onClick={handleBooking}
               disabled={!car.isAvailable || isSubmitting}
-              className="w-full rounded-md bg-[#474dec] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#3a39e0] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="btn-primary w-full"
             >
               {isSubmitting ? (
                 <>

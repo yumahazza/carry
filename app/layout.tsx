@@ -14,9 +14,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className="bg-[#141414] text-[#f3f4f6] antialiased min-h-screen">
+      <body className="min-h-screen bg-canvas font-sans text-primary">
         <Navbar />
-        <main className="min-h-screen">
+        <main className="min-h-[calc(100vh-4rem)]">
           {children}
         </main>
       </body>

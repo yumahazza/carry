@@ -35,16 +35,20 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="flex h-[70vh] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#474dec] border-t-transparent"></div>
+      <div aria-label="Memuat ringkasan admin" aria-live="polite" className="page-container-wide space-y-6 py-10">
+        <div className="skeleton h-20 rounded-xl" />
+        <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+          {[0, 1, 2, 3].map((item) => <div key={item} className="skeleton h-36 rounded-xl" />)}
+        </div>
+        <div className="skeleton h-44 rounded-xl" />
       </div>
     );
   }
 
   if (!stats) {
     return (
-      <div className="mx-auto max-w-5xl px-6 py-32 text-center">
-        <div className="rounded-xl border border-[#f87171]/20 bg-[#f87171]/10 p-6 text-sm text-[#f87171] max-w-md mx-auto">
+      <div className="page-container py-16 text-center sm:py-24">
+        <div role="alert" className="mx-auto max-w-md rounded-xl border border-[rgba(251,113,133,0.28)] bg-[rgba(251,113,133,0.12)] p-5 text-sm leading-relaxed text-danger">
           Gagal memuat data analitik. Pastikan Anda masuk dengan hak akses Admin.
         </div>
       </div>
@@ -52,25 +56,29 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-6 pt-28 pb-16">
+    <div className="page-container-wide py-8 sm:py-10">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+      <div className="mb-7 flex flex-col items-start justify-between gap-5 border-b border-border-subtle pb-6 sm:flex-row sm:items-end">
         <div>
-          <p className="text-xs font-medium text-[#aaaaaa] uppercase tracking-wider mb-1">Overview & Metrics</p>
-          <h1 className="text-3xl font-bold tracking-tight text-white">Admin Dashboard</h1>
-          <p className="text-xs text-[#aaaaaa] mt-1">Pantau performa rental Carry dan status operasional armada secara real-time.</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-[#a5b4fc]">
+            Overview & Metrics
+          </p>
+          <h1 className="text-3xl font-bold tracking-tight text-primary sm:text-4xl">Admin Dashboard</h1>
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-secondary">
+            Pantau performa rental Carry dan status operasional armada secara real-time.
+          </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
           <Link
             href="/bookings"
-            className="px-4 py-2 bg-[#474dec] text-white text-xs font-semibold rounded-md hover:bg-[#3a39e0] transition-colors"
+            className="btn-primary w-full sm:w-auto"
           >
             Kelola Booking &rarr;
           </Link>
           <Link
             href="/cars"
-            className="px-4 py-2 border border-white/10 bg-white/5 text-white text-xs font-medium rounded-md hover:bg-white/10 transition-colors"
+            className="btn-secondary w-full sm:w-auto"
           >
             Daftar Armada
           </Link>
@@ -78,86 +86,91 @@ export default function AdminDashboard() {
       </div>
 
       {/* Grid Statistik */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+      <div className="mb-8 grid grid-cols-2 gap-4 xl:grid-cols-4">
         {/* Card 1: Total Armada */}
-        <div className="bg-[#1f1f1f] border border-white/5 rounded-xl p-5 hover:border-white/10 transition-colors">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-[#aaaaaa] uppercase tracking-wider">Total Armada</span>
-            <span className="w-2 h-2 rounded-full bg-white/20"></span>
+        <div className="surface-card p-4 sm:p-5">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <span className="text-xs font-medium uppercase tracking-wider text-secondary">Total Armada</span>
+            <span className="status-badge status-neutral">Units</span>
           </div>
-          <h2 className="text-3xl font-bold tracking-tight text-white mb-2">{stats.totalCars}</h2>
-          <p className="text-xs text-[#aaaaaa]">Unit mobil terdaftar</p>
+          <h2 className="mb-1 text-2xl font-bold tracking-tight tabular-nums text-primary sm:text-3xl">{stats.totalCars}</h2>
+          <p className="text-xs text-secondary sm:text-sm">Unit mobil terdaftar</p>
         </div>
 
         {/* Card 2: Mobil Tersedia */}
-        <div className="bg-[#1f1f1f] border border-white/5 rounded-xl p-5 hover:border-white/10 transition-colors">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-[#aaaaaa] uppercase tracking-wider">Armada Siap Pakai</span>
-            <span className="w-2 h-2 rounded-full bg-[#4ade80]"></span>
+        <div className="surface-card p-4 sm:p-5">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <span className="text-xs font-medium uppercase tracking-wider text-secondary">Armada Siap Pakai</span>
+            <span className="status-badge status-success">Available</span>
           </div>
-          <h2 className="text-3xl font-bold tracking-tight text-[#4ade80] mb-2">{stats.availableCars}</h2>
-          <p className="text-xs text-[#aaaaaa]">Siap untuk disewakan</p>
+          <h2 className="mb-1 text-2xl font-bold tracking-tight tabular-nums text-success sm:text-3xl">{stats.availableCars}</h2>
+          <p className="text-xs text-secondary sm:text-sm">Siap untuk disewakan</p>
         </div>
 
         {/* Card 3: Total Booking */}
-        <div className="bg-[#1f1f1f] border border-white/5 rounded-xl p-5 hover:border-white/10 transition-colors">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-[#aaaaaa] uppercase tracking-wider">Total Reservasi</span>
-            <span className="w-2 h-2 rounded-full bg-[#474dec]"></span>
+        <div className="surface-card p-4 sm:p-5">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <span className="text-xs font-medium uppercase tracking-wider text-secondary">Total Reservasi</span>
+            <span className="status-badge status-brand">Bookings</span>
           </div>
-          <h2 className="text-3xl font-bold tracking-tight text-white mb-2">{stats.totalBookings}</h2>
-          <div className="flex items-center gap-2 text-xs">
-            <span className="text-[#facc15] font-medium">{stats.pendingBookings} Pending</span>
-            <span className="text-[#666666]">•</span>
-            <span className="text-[#4ade80] font-medium">{stats.confirmedBookings} Confirmed</span>
+          <h2 className="mb-2 text-2xl font-bold tracking-tight tabular-nums text-primary sm:text-3xl">{stats.totalBookings}</h2>
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span className="status-badge status-warning">{stats.pendingBookings} Pending</span>
+            <span className="status-badge status-success">{stats.confirmedBookings} Confirmed</span>
           </div>
         </div>
 
         {/* Card 4: Estimasi Pendapatan */}
-        <div className="bg-[#1f1f1f] border border-white/5 rounded-xl p-5 hover:border-white/10 transition-colors">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-[#aaaaaa] uppercase tracking-wider">Estimasi Revenue</span>
-            <span className="w-2 h-2 rounded-full bg-[#60a5fa]"></span>
+        <div className="surface-card p-4 sm:p-5">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <span className="text-xs font-medium uppercase tracking-wider text-secondary">Estimasi Revenue</span>
+            <span className="status-badge status-info">Revenue</span>
           </div>
-          <h2 className="text-2xl font-bold tracking-tight text-white mb-2 truncate">
+          <h2 className="mb-1 truncate text-xl font-bold tracking-tight tabular-nums text-primary sm:text-2xl">
             Rp {stats.totalRevenue.toLocaleString('id-ID')}
           </h2>
-          <p className="text-xs text-[#aaaaaa]">Confirmed & Completed</p>
+          <p className="text-xs text-secondary sm:text-sm">Confirmed &amp; Completed</p>
         </div>
       </div>
 
       {/* Quick Summary Box */}
-      <div className="rounded-xl border border-white/5 bg-[#1f1f1f] p-6">
-        <h3 className="text-sm font-semibold uppercase tracking-wider text-[#aaaaaa] mb-4">Aktivitas & Navigasi Cepat</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="surface-card p-5 sm:p-6">
+        <div className="mb-5 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="mb-1 text-xs font-semibold uppercase tracking-[0.08em] text-[#a5b4fc]">Pintasan</p>
+            <h3 className="text-lg font-semibold tracking-tight text-primary">Aktivitas & Navigasi Cepat</h3>
+          </div>
+          <p className="text-xs text-muted">Akses menu operasional</p>
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Link
             href="/bookings"
-            className="flex items-center justify-between p-4 rounded-lg bg-[#141414] border border-white/5 hover:border-white/10 transition-colors group"
+            className="interactive-card group flex min-h-20 items-center justify-between gap-4 rounded-lg border border-border-subtle bg-canvas p-4 focus-visible:outline-none"
           >
-            <div>
-              <p className="text-sm font-semibold text-white group-hover:text-[#474dec] transition-colors">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-primary transition-colors group-hover:text-[#a5b4fc]">
                 Manajemen Booking
               </p>
-              <p className="text-xs text-[#aaaaaa] mt-0.5">
+              <p className="mt-1 text-sm leading-relaxed text-secondary">
                 Konfirmasi, tolak, atau selesaikan pesanan customer
               </p>
             </div>
-            <span className="text-xs text-[#aaaaaa] group-hover:text-white transition-colors">&rarr;</span>
+            <span aria-hidden="true" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border-default text-sm text-secondary transition-colors group-hover:border-[rgba(71,77,236,0.30)] group-hover:text-primary">&rarr;</span>
           </Link>
 
           <Link
             href="/cars"
-            className="flex items-center justify-between p-4 rounded-lg bg-[#141414] border border-white/5 hover:border-white/10 transition-colors group"
+            className="interactive-card group flex min-h-20 items-center justify-between gap-4 rounded-lg border border-border-subtle bg-canvas p-4 focus-visible:outline-none"
           >
-            <div>
-              <p className="text-sm font-semibold text-white group-hover:text-[#474dec] transition-colors">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-primary transition-colors group-hover:text-[#a5b4fc]">
                 Katalog Armada
               </p>
-              <p className="text-xs text-[#aaaaaa] mt-0.5">
+              <p className="mt-1 text-sm leading-relaxed text-secondary">
                 Lihat dan periksa status ketersediaan armada mobil
               </p>
             </div>
-            <span className="text-xs text-[#aaaaaa] group-hover:text-white transition-colors">&rarr;</span>
+            <span aria-hidden="true" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border-default text-sm text-secondary transition-colors group-hover:border-[rgba(71,77,236,0.30)] group-hover:text-primary">&rarr;</span>
           </Link>
         </div>
       </div>

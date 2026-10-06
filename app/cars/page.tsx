@@ -42,43 +42,46 @@ export default function CarsPage() {
   });
 
   return (
-    <div className="min-h-screen pt-28 pb-16 px-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="pb-12 pt-10 sm:pb-16 sm:pt-12">
+      <div className="page-container">
         {/* Header */}
-        <div className="mb-8">
-          <p className="text-xs font-medium text-[#aaaaaa] uppercase tracking-wider mb-1">Fleet Directory</p>
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white mb-2">Daftar Mobil</h1>
-          <p className="text-sm text-[#aaaaaa]">Pilih armada berkualitas untuk perjalanan bisnis maupun liburan Anda.</p>
+        <div className="mb-7">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Fleet Directory</p>
+          <h1 className="mb-2 text-3xl font-bold tracking-tight text-primary sm:text-4xl">Daftar Mobil</h1>
+          <p className="max-w-2xl text-sm leading-relaxed text-secondary sm:text-base">Pilih armada berkualitas untuk perjalanan bisnis maupun liburan Anda.</p>
         </div>
 
         {/* Filter */}
-        <div className="mb-8 flex flex-wrap gap-2">
+        <div role="group" aria-label="Filter ketersediaan armada" className="mb-7 flex flex-wrap gap-2">
           <button
             onClick={() => setFilter('all')}
-            className={`px-3.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
+            aria-pressed={filter === 'all'}
+            className={`min-h-11 rounded-lg px-4 text-sm font-medium transition-colors focus-visible:outline-none ${
               filter === 'all'
-                ? 'bg-[#474dec] text-white'
-                : 'border border-white/10 bg-white/5 text-[#aaaaaa] hover:text-white hover:bg-white/10'
+                ? 'border border-[rgba(71,77,236,0.30)] bg-[rgba(71,77,236,0.12)] text-[#a5b4fc]'
+                : 'border border-border-default bg-white/[0.04] text-secondary hover:border-border-strong hover:bg-white/[0.08] hover:text-primary'
             }`}
           >
             Semua ({cars.length})
           </button>
           <button
             onClick={() => setFilter('available')}
-            className={`px-3.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
+            aria-pressed={filter === 'available'}
+            className={`min-h-11 rounded-lg px-4 text-sm font-medium transition-colors focus-visible:outline-none ${
               filter === 'available'
-                ? 'bg-[#4ade80]/15 text-[#4ade80] border border-[#4ade80]/30'
-                : 'border border-white/10 bg-white/5 text-[#aaaaaa] hover:text-white hover:bg-white/10'
+                ? 'border border-[rgba(52,211,153,0.28)] bg-[rgba(52,211,153,0.12)] text-success'
+                : 'border border-border-default bg-white/[0.04] text-secondary hover:border-border-strong hover:bg-white/[0.08] hover:text-primary'
             }`}
           >
             Tersedia ({cars.filter((c) => c.isAvailable).length})
           </button>
           <button
             onClick={() => setFilter('unavailable')}
-            className={`px-3.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
+            aria-pressed={filter === 'unavailable'}
+            className={`min-h-11 rounded-lg px-4 text-sm font-medium transition-colors focus-visible:outline-none ${
               filter === 'unavailable'
-                ? 'bg-[#f87171]/15 text-[#f87171] border border-[#f87171]/30'
-                : 'border border-white/10 bg-white/5 text-[#aaaaaa] hover:text-white hover:bg-white/10'
+                ? 'border border-[rgba(251,113,133,0.28)] bg-[rgba(251,113,133,0.12)] text-danger'
+                : 'border border-border-default bg-white/[0.04] text-secondary hover:border-border-strong hover:bg-white/[0.08] hover:text-primary'
             }`}
           >
             Tidak Tersedia ({cars.filter((c) => !c.isAvailable).length})
@@ -87,74 +90,83 @@ export default function CarsPage() {
 
         {/* Grid */}
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-24 text-[#aaaaaa]">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#474dec] border-t-transparent mb-4"></div>
-            <p className="text-sm">Memuat daftar armada...</p>
+          <div aria-label="Memuat daftar armada" aria-live="polite" aria-busy="true" className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }, (_, index) => (
+              <div key={index} className="overflow-hidden rounded-xl border border-border-subtle bg-surface">
+                <div className="skeleton aspect-[16/10] rounded-none" />
+                <div className="space-y-3 p-5">
+                  <div className="skeleton h-5 w-3/5" />
+                  <div className="skeleton h-4 w-2/5" />
+                  <div className="skeleton mt-5 h-5 w-1/2" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : filteredCars.length === 0 ? (
-          <div className="text-center py-16 rounded-xl border border-dashed border-white/10 bg-[#1f1f1f]/50">
-            <p className="text-sm text-[#aaaaaa]">Tidak ada mobil yang sesuai dengan filter yang dipilih.</p>
+          <div className="rounded-xl border border-dashed border-border-default bg-surface/50 px-5 py-14 text-center">
+            <h2 className="text-lg font-semibold text-primary">Tidak ada mobil yang cocok dengan filter ini.</h2>
+            <p className="mx-auto mt-2 max-w-md text-sm text-secondary">Coba ubah pilihan ketersediaan untuk melihat armada lainnya.</p>
             <button
               onClick={() => setFilter('all')}
-              className="mt-4 text-xs font-medium text-[#474dec] hover:underline"
+              className="btn-secondary mt-5"
             >
               Reset Filter
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {filteredCars.map((car) => (
               <Link
                 key={car.id}
                 href={`/cars/${car.id}`}
-                className="group bg-[#1f1f1f] rounded-xl border border-white/5 overflow-hidden hover:border-[#474dec]/30 hover:bg-[#242424] transition-all duration-200 flex flex-col"
+                className="interactive-card group flex flex-col overflow-hidden rounded-xl border border-border-subtle bg-surface focus-visible:outline-none"
               >
-                <div className="aspect-[16/10] bg-[#141414] relative overflow-hidden flex items-center justify-center">
+                <div className="relative flex aspect-[16/10] items-center justify-center overflow-hidden bg-surface-raised">
                   {car.image ? (
                     <img
                       src={car.image}
                       alt={car.name}
-                      className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
+                      className="h-full w-full object-cover transition-transform duration-[260ms] group-hover:scale-[1.03]"
                     />
                   ) : (
-                    <div className="flex flex-col items-center justify-center text-[#666666]">
-                      <svg className="w-12 h-12 stroke-current fill-none stroke-[1.5]" viewBox="0 0 24 24">
+                    <div className="flex flex-col items-center justify-center text-muted">
+                      <svg aria-hidden="true" className="h-12 w-12 fill-none stroke-current stroke-[1.5]" viewBox="0 0 24 24">
                         <path d="M5 17h14v-4l-2-6H7L5 13v4zM5 17a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm14 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM7 13h10" />
                       </svg>
-                      <span className="text-xs mt-2 uppercase tracking-wider">No Image</span>
+                      <span className="mt-2 text-xs uppercase tracking-wider">No Image</span>
                     </div>
                   )}
                 </div>
 
-                <div className="p-5 flex-1 flex flex-col justify-between">
+                <div className="flex flex-1 flex-col justify-between p-5">
                   <div>
-                    <div className="flex justify-between items-start gap-2 mb-1.5">
-                      <h3 className="text-lg font-bold tracking-tight text-white group-hover:text-[#f3f4f6]">
+                    <div className="mb-1.5 flex items-start justify-between gap-2">
+                      <h3 className="truncate text-lg font-semibold tracking-tight text-primary">
                         {car.name}
                       </h3>
                       <span
-                        className={`rounded-full px-2.5 py-0.5 text-xs font-medium border ${
+                        className={`status-badge shrink-0 ${
                           car.isAvailable
-                            ? 'bg-[#4ade80]/10 text-[#4ade80] border-[#4ade80]/20'
-                            : 'bg-[#f87171]/10 text-[#f87171] border-[#f87171]/20'
+                            ? 'status-success'
+                            : 'status-danger'
                         }`}
                       >
-                        {car.isAvailable ? 'Tersedia' : 'Disewa'}
+                        {car.isAvailable ? 'Available' : 'Rented'}
                       </span>
                     </div>
-                    <p className="text-xs text-[#aaaaaa]">
+                    <p className="text-sm text-secondary">
                       {car.brand} • {car.year}
                     </p>
                   </div>
 
-                  <div className="mt-5 pt-4 border-t border-white/5 flex items-baseline justify-between">
+                  <div className="mt-5 flex items-baseline justify-between border-t border-border-subtle pt-4">
                     <div>
-                      <span className="text-base font-bold text-white">
+                      <span className="tabular-nums text-xl font-bold text-primary">
                         Rp {car.pricePerDay.toLocaleString('id-ID')}
                       </span>
-                      <span className="text-xs text-[#aaaaaa] ml-1">/hari</span>
+                      <span className="ml-1 text-sm text-muted">/hari</span>
                     </div>
-                    <span className="text-xs font-medium text-[#474dec] group-hover:translate-x-0.5 transition-transform">
+                    <span className="text-sm font-medium text-[#a5b4fc] group-hover:underline group-hover:underline-offset-4">
                       Detail &rarr;
                     </span>
                   </div>

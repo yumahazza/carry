@@ -64,72 +64,62 @@ export default function Navbar() {
     return pathname.startsWith(href);
   };
 
+  const navLinkClass = (active: boolean) =>
+    `inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-medium transition-colors duration-150 focus-visible:outline-none ${
+      active
+        ? 'bg-[rgba(71,77,236,0.12)] text-[#a5b4fc]'
+        : 'text-secondary hover:bg-white/5 hover:text-primary'
+    }`;
+
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 h-16 transition-colors duration-200 ${
+      aria-label="Navigasi utama"
+      className={`sticky top-0 z-50 h-16 border-b border-border-subtle transition-colors duration-150 ${
         scrolled
-          ? 'bg-[#141414]/90 backdrop-blur-md border-b border-white/5'
-          : 'bg-[#141414]/70 backdrop-blur-sm border-b border-white/5'
+          ? 'bg-canvas/95 shadow-xs backdrop-blur-md'
+          : 'bg-canvas/85 backdrop-blur-md'
       }`}
     >
-      <div className="max-w-7xl mx-auto h-full px-6 flex items-center justify-between">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-7 h-7 rounded-md bg-[#474dec] flex items-center justify-center text-white font-bold text-sm tracking-tighter">
+      <div className="page-container-wide flex h-full items-center justify-between gap-4">
+        <Link href="/" className="group inline-flex shrink-0 items-center gap-2.5 rounded-lg focus-visible:outline-none">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand text-sm font-bold tracking-tight text-white">
             C
-          </div>
-          <span className="text-lg font-bold tracking-tight text-[#f3f4f6] group-hover:text-white transition-colors">
+          </span>
+          <span className="text-lg font-bold tracking-tight text-primary transition-colors group-hover:text-white">
             Carry
           </span>
         </Link>
 
-        {/* Menu Items */}
-        <div className="flex items-center gap-1.5">
-          <Link
-            href="/"
-            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-              isActive('/') && pathname === '/'
-                ? 'bg-white/10 text-white'
-                : 'text-[#aaaaaa] hover:text-white hover:bg-white/5'
-            }`}
-          >
+        <div className="hidden min-w-0 items-center gap-1 lg:flex">
+          <Link href="/" aria-current={isActive('/') ? 'page' : undefined} className={navLinkClass(isActive('/'))}>
             Beranda
           </Link>
 
           <Link
             href="/cars"
-            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-              isActive('/cars')
-                ? 'bg-white/10 text-white'
-                : 'text-[#aaaaaa] hover:text-white hover:bg-white/5'
-            }`}
+            aria-current={isActive('/cars') ? 'page' : undefined}
+            className={navLinkClass(isActive('/cars'))}
           >
             Daftar Mobil
           </Link>
 
           {loading ? (
-            <span className="px-3 py-1.5 text-[#666666] text-xs">Memuat...</span>
+            <span aria-live="polite" className="px-3 py-1.5 text-xs text-muted">Memuat...</span>
           ) : user ? (
             <>
               {user.role === 'ADMIN' ? (
                 <>
                   <Link
                     href="/admin"
-                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                      isActive('/admin')
-                        ? 'bg-white/10 text-white'
-                        : 'text-[#aaaaaa] hover:text-white hover:bg-white/5'
-                    }`}
+                    aria-current={isActive('/admin') ? 'page' : undefined}
+                    className={navLinkClass(isActive('/admin'))}
                   >
                     Dashboard
                   </Link>
                   <Link
                     href="/bookings"
-                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                      isActive('/bookings')
-                        ? 'bg-white/10 text-white'
-                        : 'text-[#aaaaaa] hover:text-white hover:bg-white/5'
-                    }`}
+                    aria-current={isActive('/bookings') ? 'page' : undefined}
+                    className={navLinkClass(isActive('/bookings'))}
                   >
                     Booking Masuk
                   </Link>
@@ -137,24 +127,21 @@ export default function Navbar() {
               ) : (
                 <Link
                   href="/my-bookings"
-                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                    isActive('/my-bookings')
-                      ? 'bg-white/10 text-white'
-                      : 'text-[#aaaaaa] hover:text-white hover:bg-white/5'
-                  }`}
+                  aria-current={isActive('/my-bookings') ? 'page' : undefined}
+                  className={navLinkClass(isActive('/my-bookings'))}
                 >
                   Booking Saya
                 </Link>
               )}
 
-              <div className="ml-3 pl-3 border-l border-white/10 flex items-center gap-3">
-                <span className="text-xs text-[#aaaaaa]">
-                  Halo, <span className="text-[#f3f4f6] font-medium">{user.name}</span>
+              <div className="ml-2 flex items-center gap-3 border-l border-border-default pl-4">
+                <span className="max-w-36 truncate text-xs text-secondary">
+                  Halo, <span className="font-medium text-primary">{user.name}</span>
                 </span>
 
                 <button
                   onClick={handleLogout}
-                  className="px-3 py-1.5 text-xs font-medium text-[#f87171] bg-[#f87171]/10 border border-[#f87171]/20 rounded-md hover:bg-[#f87171]/20 transition-colors"
+                  className="btn-danger-soft min-h-10 px-3 text-xs"
                 >
                   Logout
                 </button>
@@ -164,19 +151,72 @@ export default function Navbar() {
             <div className="ml-2 flex items-center gap-2">
               <Link
                 href="/login"
-                className="px-3.5 py-1.5 text-sm font-medium text-[#aaaaaa] hover:text-white hover:bg-white/5 rounded-md transition-colors"
+                className="btn-ghost"
               >
                 Masuk
               </Link>
               <Link
                 href="/register"
-                className="px-4 py-1.5 text-sm font-semibold bg-[#474dec] text-white rounded-md hover:bg-[#3a39e0] transition-colors"
+                className="btn-primary min-h-10 px-4"
               >
                 Daftar
               </Link>
             </div>
           )}
         </div>
+
+        <details key={pathname} className="mobile-menu relative lg:hidden">
+          <summary
+            aria-label="Menu navigasi"
+            className="flex h-11 w-11 list-none items-center justify-center rounded-lg border border-border-default bg-white/[0.04] text-primary transition-colors hover:bg-white/[0.08] focus-visible:outline-none [&::-webkit-details-marker]:hidden"
+          >
+            <svg aria-hidden="true" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <path strokeLinecap="round" d="M4 7h16M4 12h16M4 17h16" />
+            </svg>
+          </summary>
+          <div className="absolute right-0 top-[calc(100%+8px)] z-50 w-[min(20rem,calc(100vw-2rem))] rounded-xl border border-border-default bg-surface p-2 shadow-md">
+            <div className="flex flex-col">
+              <Link href="/" aria-current={isActive('/') ? 'page' : undefined} className={navLinkClass(isActive('/'))}>
+                Beranda
+              </Link>
+              <Link href="/cars" aria-current={isActive('/cars') ? 'page' : undefined} className={navLinkClass(isActive('/cars'))}>
+                Daftar Mobil
+              </Link>
+              {!loading && user?.role === 'ADMIN' && (
+                <>
+                  <Link href="/admin" aria-current={isActive('/admin') ? 'page' : undefined} className={navLinkClass(isActive('/admin'))}>
+                    Dashboard
+                  </Link>
+                  <Link href="/bookings" aria-current={isActive('/bookings') ? 'page' : undefined} className={navLinkClass(isActive('/bookings'))}>
+                    Booking Masuk
+                  </Link>
+                </>
+              )}
+              {!loading && user && user.role !== 'ADMIN' && (
+                <Link href="/my-bookings" aria-current={isActive('/my-bookings') ? 'page' : undefined} className={navLinkClass(isActive('/my-bookings'))}>
+                  Booking Saya
+                </Link>
+              )}
+              {loading ? (
+                <span className="px-3 py-3 text-sm text-muted">Memuat...</span>
+              ) : user ? (
+                <div className="mt-2 border-t border-border-subtle pt-2">
+                  <p className="truncate px-3 py-2 text-sm text-secondary">
+                    Halo, <span className="font-medium text-primary">{user.name}</span>
+                  </p>
+                  <button onClick={handleLogout} className="btn-danger-soft w-full">
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <div className="mt-2 grid grid-cols-2 gap-2 border-t border-border-subtle pt-2">
+                  <Link href="/login" className="btn-secondary">Masuk</Link>
+                  <Link href="/register" className="btn-primary">Daftar</Link>
+                </div>
+              )}
+            </div>
+          </div>
+        </details>
       </div>
     </nav>
   );

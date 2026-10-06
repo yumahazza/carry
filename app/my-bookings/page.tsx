@@ -1,292 +1,132 @@
 'use client';
+
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 
-interface MyBooking {
+interface Booking {
   id: string;
   startDate: string;
   endDate: string;
   totalPrice: number;
-  status: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'COMPLETED' | 'CANCELLED';
   car: {
+    id: string;
     name: string;
     brand: string;
-    image: string;
-    pricePerDay: number;
+    image?: string;
   };
 }
 
 export default function MyBookingsPage() {
-  const [bookings, setBookings] = useState<MyBooking[]>([]);
+  const searchParams = useSearchParams();
+  const isSuccess = searchParams.get('success') === 'true';
+
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchMyBookings = async () => {
-    try {
-      const res = await fetch('/api/my-bookings', {
-        credentials: 'include',
-      });
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        setBookings(data);
-      }
-    } catch (error) {
-      console.error('Gagal mengambil data booking:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchMyBookings();
+    const fetchBookings = async () => {
+      try {
+        const res = await fetch('/api/bookings/my');
+        const data = await res.json();
+        if (Array.isArray(data)) setBookings(data);
+      } catch (error) {
+        console.error('Failed to fetch bookings:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBookings();
   }, []);
 
-  const handleLogout = async () => {
-    try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-      window.location.href = '/login';
-    } catch (error) {
-      console.error('Gagal logout:', error);
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    });
-  };
-
-  // ✅ FUNGSI INI HARUS ADA DI DALAM KOMPONEN
   const getStatusStyle = (status: string) => {
     switch (status) {
-      case 'PENDING':
-        return { backgroundColor: '#ffc107', color: '#000' };
-      case 'CONFIRMED':
-        return { backgroundColor: '#4ade80', color: '#000' };
-      case 'CANCELLED':
-        return { backgroundColor: '#f87171', color: '#000' };
-      case 'COMPLETED':
-        return { backgroundColor: '#474dec', color: '#fff' };
-      default:
-        return { backgroundColor: '#555', color: '#fff' };
+      case 'APPROVED': return 'bg-[#4ade80]/10 text-[#4ade80] border-[#4ade80]/20';
+      case 'PENDING': return 'bg-[#facc15]/10 text-[#facc15] border-[#facc15]/20';
+      case 'REJECTED':
+      case 'CANCELLED': return 'bg-[#f87171]/10 text-[#f87171] border-[#f87171]/20';
+      case 'COMPLETED': return 'bg-[#60a5fa]/10 text-[#60a5fa] border-[#60a5fa]/20';
+      default: return 'bg-white/5 text-[#aaaaaa] border-white/10';
     }
+  };
+
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
   return (
-    <main
-      style={{
-        minHeight: '100vh',
-        backgroundColor: '#1f1f1f',
-        padding: '2rem 1rem',
-        fontFamily: 'sans-serif',
-        color: '#f3f4f6',
-      }}
-    >
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        {/* Header & Navigasi */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '2.5rem',
-            flexWrap: 'wrap',
-            gap: '1rem',
-          }}
-        >
-          <div>
-            <h1 style={{ margin: 0, fontSize: '1.8rem' }}>📅 Booking Saya</h1>
-            <p style={{ margin: '0.5rem 0 0', color: '#aaaaaa', fontSize: '0.9rem' }}>
-              Pantau status penyewaan mobil Anda di sini.
-            </p>
-          </div>
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <Link
-              href="/"
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#313030',
-                color: '#f3f4f6',
-                textDecoration: 'none',
-                borderRadius: '6px',
-                fontWeight: 'bold',
-                border: '1px solid #555',
-              }}
-            >
-              🏠 Beranda
-            </Link>
-            <button
-              onClick={handleLogout}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#f87171',
-                color: '#000',
-                border: 'none',
-                borderRadius: '6px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-              }}
-            >
-              🚪 Logout
-            </button>
-          </div>
-        </div>
-
-        {/* Konten Utama */}
-        {loading ? (
-          <p style={{ textAlign: 'center', color: '#aaaaaa', marginTop: '3rem' }}>
-            Memuat riwayat booking...
-          </p>
-        ) : bookings.length === 0 ? (
-          <div
-            style={{
-              textAlign: 'center',
-              padding: '4rem 2rem',
-              backgroundColor: '#313030',
-              borderRadius: '12px',
-              border: '1px dashed #555',
-            }}
-          >
-            <h2 style={{ color: '#f3f4f6', marginBottom: '1rem' }}>Belum ada booking 🚗</h2>
-            <p style={{ color: '#aaaaaa', marginBottom: '1.5rem' }}>
-              Anda belum menyewa mobil apapun. Yuk cari mobil impian Anda!
-            </p>
-            <Link
-              href="/"
-              style={{
-                padding: '0.75rem 1.5rem',
-                backgroundColor: '#474dec',
-                color: '#fff',
-                textDecoration: 'none',
-                borderRadius: '6px',
-                fontWeight: 'bold',
-              }}
-            >
-              Lihat Daftar Mobil
-            </Link>
-          </div>
-        ) : (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-              gap: '1.5rem',
-            }}
-          >
-            {bookings.map((booking) => (
-              <div
-                key={booking.id}
-                style={{
-                  backgroundColor: '#313030',
-                  borderRadius: '12px',
-                  overflow: 'hidden',
-                  border: '1px solid #444444',
-                  display: 'flex',
-                  flexDirection: 'column',
-                }}
-              >
-                {/* Gambar Mobil */}
-                <div
-                  style={{
-                    height: '180px',
-                    backgroundColor: '#444444',
-                    backgroundImage: `url(${
-                      booking.car.image || 'https://via.placeholder.com/400x200?text=Carry+Rental'
-                    })`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                  }}
-                ></div>
-
-                {/* Info Card */}
-                <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'flex-start',
-                      marginBottom: '1rem',
-                    }}
-                  >
-                    <div>
-                      <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#f3f4f6' }}>
-                        {booking.car.name}
-                      </h3>
-                      <p style={{ margin: '0.25rem 0 0', fontSize: '0.85rem', color: '#aaaaaa' }}>
-                        {booking.car.brand}
-                      </p>
-                    </div>
-                    <span
-                      style={{
-                        padding: '0.25rem 0.75rem',
-                        borderRadius: '999px',
-                        fontSize: '0.75rem',
-                        fontWeight: 'bold',
-                        ...getStatusStyle(booking.status),
-                      }}
-                    >
-                      {booking.status}
-                    </span>
-                  </div>
-
-                  <div
-                    style={{
-                      marginBottom: '1.5rem',
-                      fontSize: '0.9rem',
-                      color: '#d1d5db',
-                      lineHeight: '1.6',
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                      <span>📅 Mulai:</span>
-                      <strong style={{ color: '#f3f4f6' }}>{formatDate(booking.startDate)}</strong>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                      <span> Selesai:</span>
-                      <strong style={{ color: '#f3f4f6' }}>{formatDate(booking.endDate)}</strong>
-                    </div>
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        marginTop: '1rem',
-                        paddingTop: '1rem',
-                        borderTop: '1px solid #444444',
-                      }}
-                    >
-                      <span>💰 Total Harga:</span>
-                      <strong style={{ color: '#4ade80', fontSize: '1.1rem' }}>
-                        Rp {booking.totalPrice.toLocaleString('id-ID')}
-                      </strong>
-                    </div>
-                  </div>
-
-                  {/* Aksi */}
-                  <div style={{ marginTop: 'auto' }}>
-                    {booking.status === 'PENDING' && (
-                      <button
-                        style={{
-                          width: '100%',
-                          padding: '0.75rem',
-                          backgroundColor: 'transparent',
-                          border: '1px solid #f87171',
-                          color: '#f87171',
-                          borderRadius: '6px',
-                          cursor: 'pointer',
-                          fontWeight: 'bold',
-                        }}
-                      >
-                        Batalkan Booking
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+    <div className="mx-auto w-full max-w-5xl px-6 py-16">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold tracking-tight text-white">My Trips</h1>
+        <p className="mt-2 text-[#aaaaaa]">Manage your current and past car rentals.</p>
       </div>
-    </main>
+
+      {isSuccess && (
+        <div className="mb-8 rounded-lg border border-[#4ade80]/20 bg-[#4ade80]/5 p-4 text-sm text-[#4ade80]">
+          Booking submitted successfully! Waiting for admin approval.
+        </div>
+      )}
+
+      {loading ? (
+        <div className="flex h-64 items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#474dec] border-t-transparent"></div>
+        </div>
+      ) : bookings.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-white/10 py-24 text-center">
+          <p className="text-xl font-medium text-white">No trips yet.</p>
+          <p className="mt-2 text-sm text-[#aaaaaa]">Start your journey by booking your first car.</p>
+          <Link 
+            href="/cars" 
+            className="mt-6 rounded-md bg-[#474dec] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#3a39e0] transition-colors"
+          >
+            Explore Fleet
+          </Link>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {bookings.map((booking) => (
+            <div key={booking.id} className="group flex flex-col sm:flex-row items-start sm:items-center gap-6 rounded-xl border border-white/5 bg-[#1f1f1f] p-5 transition-all hover:border-white/10">
+              {/* Car Image */}
+              <div className="h-20 w-28 flex-shrink-0 overflow-hidden rounded-lg bg-[#141414]">
+                <img 
+                  src={booking.car.image || "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=400&q=80"} 
+                  alt={booking.car.name} 
+                  className="h-full w-full object-cover" 
+                />
+              </div>
+
+              {/* Details */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-3 mb-1">
+                  <h3 className="text-lg font-semibold text-white truncate">{booking.car.name}</h3>
+                  <span className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${getStatusStyle(booking.status)}`}>
+                    {booking.status}
+                  </span>
+                </div>
+                <p className="text-sm text-[#aaaaaa]">
+                  {formatDate(booking.startDate)} — {formatDate(booking.endDate)}
+                </p>
+              </div>
+
+              {/* Price & Action */}
+              <div className="flex items-center gap-6 w-full sm:w-auto justify-between sm:justify-end">
+                <div className="text-right">
+                  <p className="text-xs text-[#aaaaaa]">Total</p>
+                  <p className="text-lg font-bold text-white">Rp {booking.totalPrice.toLocaleString()}</p>
+                </div>
+                <Link 
+                  href={`/cars/${booking.car.id}`}
+                  className="rounded-md border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-white/10"
+                >
+                  View Car
+                </Link>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

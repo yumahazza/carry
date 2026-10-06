@@ -25,7 +25,7 @@ export default function CarDetailPage() {
 
   const [car, setCar] = useState<Car | null>(null);
   const [loading, setLoading] = useState(true);
-  
+
   // Booking State
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -59,11 +59,11 @@ export default function CarDetailPage() {
 
   const handleBooking = async () => {
     if (!startDate || !endDate) {
-      setError('Please select start and end dates.');
+      setError('Silakan pilih tanggal mulai dan tanggal selesai.');
       return;
     }
     if (new Date(startDate) >= new Date(endDate)) {
-      setError('End date must be after start date.');
+      setError('Tanggal selesai harus setelah tanggal mulai.');
       return;
     }
 
@@ -84,7 +84,7 @@ export default function CarDetailPage() {
 
       if (!res.ok) {
         const errData = await res.json();
-        throw new Error(errData.error || 'Failed to create booking');
+        throw new Error(errData.error || 'Gagal membuat booking');
       }
 
       router.push('/my-bookings?success=true');
@@ -97,7 +97,7 @@ export default function CarDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex h-[60vh] items-center justify-center">
+      <div className="flex h-[70vh] items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#474dec] border-t-transparent"></div>
       </div>
     );
@@ -105,10 +105,14 @@ export default function CarDetailPage() {
 
   if (!car) {
     return (
-      <div className="mx-auto max-w-7xl px-6 py-24 text-center">
-        <h1 className="text-2xl font-bold text-white">Car Not Found</h1>
-        <Link href="/cars" className="mt-4 inline-block text-[#474dec] hover:underline">
-          ← Back to Fleet
+      <div className="mx-auto max-w-7xl px-6 py-32 text-center">
+        <h1 className="text-2xl font-bold tracking-tight text-white mb-2">Mobil Tidak Ditemukan</h1>
+        <p className="text-sm text-[#aaaaaa] mb-6">Armada yang Anda cari tidak tersedia atau telah dihapus.</p>
+        <Link
+          href="/cars"
+          className="inline-flex items-center px-4 py-2 bg-[#474dec] text-white rounded-md text-xs font-semibold hover:bg-[#3a39e0] transition-colors"
+        >
+          &larr; Kembali ke Daftar Mobil
         </Link>
       </div>
     );
@@ -118,17 +122,17 @@ export default function CarDetailPage() {
   const defaultImage = "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1200&q=80";
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-6 py-12">
+    <div className="mx-auto w-full max-w-7xl px-6 pt-28 pb-16">
       {/* Breadcrumb */}
-      <div className="mb-8 flex items-center gap-2 text-sm text-[#aaaaaa]">
-        <Link href="/cars" className="hover:text-white transition-colors">Fleet</Link>
-        <span>/</span>
-        <span className="text-white">{car.name}</span>
+      <div className="mb-8 flex items-center gap-2 text-xs text-[#aaaaaa]">
+        <Link href="/cars" className="hover:text-white transition-colors">Daftar Mobil</Link>
+        <span className="text-[#666666]">/</span>
+        <span className="text-[#f3f4f6] font-medium">{car.name}</span>
       </div>
 
-      <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
-        {/* LEFT COLUMN: Image & Gallery */}
-        <div className="space-y-6">
+      <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
+        {/* LEFT COLUMN: Image & Specs (7 cols) */}
+        <div className="space-y-6 lg:col-span-7">
           <div className="aspect-[16/10] overflow-hidden rounded-xl border border-white/5 bg-[#1f1f1f]">
             <img 
               src={car.image || defaultImage} 
@@ -138,95 +142,111 @@ export default function CarDetailPage() {
           </div>
           
           {/* Specs Grid */}
-          <div className="grid grid-cols-3 gap-4">
-            <div className="rounded-lg border border-white/5 bg-[#1f1f1f] p-4 text-center">
-              <p className="text-xs text-[#aaaaaa] mb-1">Seats</p>
-              <p className="text-lg font-semibold text-white">{car.seats || '5'}</p>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="rounded-xl border border-white/5 bg-[#1f1f1f] p-4 text-center">
+              <p className="text-xs font-medium text-[#aaaaaa] uppercase tracking-wider mb-1">Seats</p>
+              <p className="text-base font-bold text-white">{car.seats || '5'} Kursi</p>
             </div>
-            <div className="rounded-lg border border-white/5 bg-[#1f1f1f] p-4 text-center">
-              <p className="text-xs text-[#aaaaaa] mb-1">Transmission</p>
-              <p className="text-lg font-semibold text-white">{car.transmission || 'Auto'}</p>
+            <div className="rounded-xl border border-white/5 bg-[#1f1f1f] p-4 text-center">
+              <p className="text-xs font-medium text-[#aaaaaa] uppercase tracking-wider mb-1">Transmission</p>
+              <p className="text-base font-bold text-white">{car.transmission || 'Automatic'}</p>
             </div>
-            <div className="rounded-lg border border-white/5 bg-[#1f1f1f] p-4 text-center">
-              <p className="text-xs text-[#aaaaaa] mb-1">Fuel</p>
-              <p className="text-lg font-semibold text-white">{car.fuel || 'Petrol'}</p>
+            <div className="rounded-xl border border-white/5 bg-[#1f1f1f] p-4 text-center">
+              <p className="text-xs font-medium text-[#aaaaaa] uppercase tracking-wider mb-1">Fuel</p>
+              <p className="text-base font-bold text-white">{car.fuel || 'Bensin'}</p>
             </div>
+          </div>
+
+          <div className="rounded-xl border border-white/5 bg-[#1f1f1f] p-6 space-y-3">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-[#aaaaaa]">Deskripsi Kendaraan</h2>
+            <p className="text-sm text-[#cccccc] leading-relaxed">
+              {car.description || `Kendaraan ${car.name} tahun ${car.year} dari ${car.brand} menawarkan kenyamanan berkendara terbaik dengan performa optimal, efisiensi bahan bakar, serta fitur keselamatan terkini untuk perjalanan Anda.`}
+            </p>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Details & Booking */}
-        <div className="space-y-8">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-3xl font-bold text-white">{car.name}</h1>
-              <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                car.isAvailable ? 'bg-[#4ade80]/10 text-[#4ade80]' : 'bg-[#f87171]/10 text-[#f87171]'
+        {/* RIGHT COLUMN: Details & Booking (5 cols) */}
+        <div className="space-y-6 lg:col-span-5">
+          <div className="rounded-xl border border-white/5 bg-[#1f1f1f] p-6">
+            <div className="flex items-start justify-between gap-3 mb-2">
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">{car.name}</h1>
+                <p className="text-xs text-[#aaaaaa] mt-1">{car.brand} • Tahun {car.year}</p>
+              </div>
+              <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium border ${
+                car.isAvailable ? 'bg-[#4ade80]/10 text-[#4ade80] border-[#4ade80]/20' : 'bg-[#f87171]/10 text-[#f87171] border-[#f87171]/20'
               }`}>
-                {car.isAvailable ? 'Available' : 'Rented'}
+                {car.isAvailable ? 'Tersedia' : 'Disewa'}
               </span>
             </div>
-            <p className="text-[#aaaaaa]">{car.brand} • {car.year}</p>
           </div>
 
-          <p className="text-[#cccccc] leading-relaxed">
-            {car.description || `Experience the perfect blend of luxury and performance with the ${car.name}. Ideal for both city driving and long journeys, this ${car.year} model ensures a smooth and comfortable ride.`}
-          </p>
-
           {/* Booking Card */}
-          <div className="rounded-xl border border-white/10 bg-[#1a1a1a] p-6 space-y-6">
+          <div className="rounded-xl border border-white/10 bg-[#1a1a1a] p-6 space-y-5">
             <div className="flex items-baseline justify-between border-b border-white/5 pb-4">
-              <p className="text-2xl font-bold text-white">
-                Rp {car.pricePerDay.toLocaleString()}
-                <span className="text-sm font-normal text-[#aaaaaa]"> / day</span>
-              </p>
+              <div>
+                <p className="text-xs font-medium text-[#aaaaaa] uppercase tracking-wider mb-1">Harga Sewa</p>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-2xl font-bold tracking-tight text-white">
+                    Rp {car.pricePerDay.toLocaleString('id-ID')}
+                  </span>
+                  <span className="text-xs text-[#aaaaaa]">/ hari</span>
+                </div>
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-[#aaaaaa] uppercase tracking-wider">Start Date</label>
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-medium text-[#aaaaaa] uppercase tracking-wider mb-2 block">
+                  Tanggal Mulai
+                </label>
                 <input 
                   type="date" 
                   value={startDate} 
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full"
+                  className="w-full bg-[#1f1f1f] border border-white/10 rounded-md px-3.5 py-2.5 text-sm text-[#f3f4f6] focus:outline-none focus:border-[#474dec] focus:ring-2 focus:ring-[#474dec]/50 transition-all"
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-[#aaaaaa] uppercase tracking-wider">End Date</label>
+              <div>
+                <label className="text-xs font-medium text-[#aaaaaa] uppercase tracking-wider mb-2 block">
+                  Tanggal Selesai
+                </label>
                 <input 
                   type="date" 
                   value={endDate} 
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full"
+                  className="w-full bg-[#1f1f1f] border border-white/10 rounded-md px-3.5 py-2.5 text-sm text-[#f3f4f6] focus:outline-none focus:border-[#474dec] focus:ring-2 focus:ring-[#474dec]/50 transition-all"
                 />
               </div>
             </div>
 
             {error && (
-              <p className="text-sm text-[#f87171] bg-[#f87171]/10 border border-[#f87171]/20 rounded-md px-3 py-2">
+              <div className="text-xs text-[#f87171] bg-[#f87171]/10 border border-[#f87171]/20 rounded-md px-3.5 py-2.5">
                 {error}
-              </p>
+              </div>
             )}
 
             {total > 0 && (
-              <div className="flex items-center justify-between pt-2 border-t border-white/5">
-                <span className="text-[#aaaaaa]">Total Estimated Price</span>
-                <span className="text-xl font-bold text-white">Rp {total.toLocaleString()}</span>
+              <div className="flex items-center justify-between pt-3 border-t border-white/5">
+                <span className="text-xs font-medium text-[#aaaaaa] uppercase tracking-wider">Estimasi Total</span>
+                <span className="text-xl font-bold text-white">Rp {total.toLocaleString('id-ID')}</span>
               </div>
             )}
 
             <button 
               onClick={handleBooking}
               disabled={!car.isAvailable || isSubmitting}
-              className="w-full rounded-md bg-[#474dec] py-3.5 text-sm font-semibold text-white transition-all hover:bg-[#3a39e0] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full rounded-md bg-[#474dec] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#3a39e0] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isSubmitting ? (
                 <>
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                  Processing...
+                  <span>Memproses Reservasi...</span>
                 </>
+              ) : car.isAvailable ? (
+                'Pesan Sekarang'
               ) : (
-                'Reserve Now'
+                'Mobil Sedang Disewa'
               )}
             </button>
           </div>

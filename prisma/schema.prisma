@@ -1,3 +1,5 @@
+// schema.prisma
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,43 +9,69 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Car {
-  id          String    @id @default(uuid())
-  name        String
-  brand       String
-  year        Int
-  pricePerDay Int
-  isAvailable Boolean   @default(true)
-  image       String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  bookings    Booking[]
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+enum BookingStatus {
+  PENDING
+  APPROVED  
+  REJECTED
+  COMPLETED
+  CANCELLED
 }
 
 model User {
-  id        String    @id @default(uuid())
+  id        String   @id @default(cuid())
   name      String
-  email     String    @unique
+  email     String   @unique
   password  String
-  role      String    @default("CUSTOMER")
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  bookings  Booking[] 
+  role      Role     @default(CUSTOMER)
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  bookings  Booking[]
+}
+
+model Car {
+  id           String   @id @default(cuid())
+  name         String
+  brand        String
+  year         Int
+  pricePerDay  Int
+  isAvailable  Boolean  @default(true)
+  
+  image        String?
+  description  String?
+  seats        Int?
+  transmission String?
+  fuel         String?
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  bookings     Booking[]
 }
 
 model Booking {
-  id             String   @id @default(uuid())
-  customerName   String
-  customerPhone  String
-  customerEmail  String?
-  startDate      DateTime
-  endDate        DateTime
-  totalPrice     Int
-  status         String   @default("PENDING")
-  carId          String
-  car            Car      @relation(fields: [carId], references: [id])
-  userId         String?  
-  user           User?    @relation(fields: [userId], references: [id])
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id            String        @id @default(cuid())
+  carId         String
+  car           Car           @relation(fields: [carId], references: [id], onDelete: Cascade)
+  
+  userId        String?       
+  user          User?         @relation(fields: [userId], references: [id])
+  
+  customerName  String
+  customerEmail String
+  customerPhone String
+  
+  startDate     DateTime
+  endDate       DateTime
+  totalPrice    Int
+  
+  status        BookingStatus @default(PENDING)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 }

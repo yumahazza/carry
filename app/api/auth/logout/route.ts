@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server';
 
 export async function POST() {
-  const response = NextResponse.json({ message: 'Logout berhasil' });
+  const response = NextResponse.json({ success: true });
   
-  // Hapus cookie token
-  response.cookies.delete('token');
-  
+  response.cookies.set('token', '', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 0,
+    path: '/',
+  });
+
   return response;
 }

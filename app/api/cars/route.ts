@@ -1,65 +1,43 @@
-import { PrismaClient } from '@prisma/client';
 import { NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
-const prisma = new PrismaClient();
-
-// GET: Mengambil daftar mobil (dengan fitur Search & Filter)
-export async function GET(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const search = searchParams.get('search') || '';
-    const availableParam = searchParams.get('available');
-
-    const where: any = {};
-
-    if (search) {
-      where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { brand: { contains: search, mode: 'insensitive' } },
-      ];
-    }
-
-    if (availableParam === 'true') {
-      where.isAvailable = true;
-    } else if (availableParam === 'false') {
-      where.isAvailable = false;
-    }
-
-    const cars = await prisma.car.findMany({
-      orderBy: { createdAt: 'desc' },
-    });
-    return NextResponse.json(cars);
-
-  } catch (error) {
-    console.error('Error fetching cars:', error);
-    return NextResponse.json(
-      { error: 'Gagal mengambil data mobil' },
-      { status: 500 }
-    );
-  }
-}
-
-// POST: Menambah mobil baru
 export async function POST(request: Request) {
+  // 1. Guard: Wajib Admin
+  const authCheck = await requireAdmin();
+  if (authCheck instanceof NextResponse) return authCheck;
+
   try {
     const body = await request.json();
-    
-    const newCar = await prisma.car.create({
+    const { name, brand, year, pricePerDay, seats, transmission, fuel, image, description } = body;
+
+    // 2. Validasi input sederhana
+    if (!name || !brand || !pricePerDay) {
+      return NextResponse.json(
+        { error: 'Nama, merek, dan harga per hari wajib diisi.' },
+        { status: 400 }
+      );
+    }
+
+    // 3. Create ke Database
+    const car = await prisma.car.create({
       data: {
-        name: body.name,
-        brand: body.brand,
-        year: parseInt(body.year),
-        pricePerDay: parseInt(body.pricePerDay),
+        name,
+        brand,
+        year: parseInt(year) || new Date().getFullYear(),
+        pricePerDay: parseInt(pricePerDay),
+        seats: seats ? parseInt(seats) : null,
+        transmission,
+        fuel,
+        image,
+        description,
         isAvailable: true,
       },
     });
-    
-    return NextResponse.json(newCar, { status: 201 });
+
+    return NextResponse.json(car, { status: 201 });
   } catch (error) {
-    console.error('Error creating car:', error);
-    return NextResponse.json(
-      { error: 'Gagal menambahkan mobil' },
-      { status: 500 }
-    );
+    console.error('Create Car Error:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

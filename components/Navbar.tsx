@@ -65,20 +65,18 @@ export default function Navbar() {
   };
 
   const navLinkClass = (active: boolean) =>
-    `inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-medium transition-colors duration-150 focus-visible:outline-none ${
-      active
-        ? 'bg-[rgba(71,77,236,0.12)] text-[#a5b4fc]'
-        : 'text-secondary hover:bg-white/5 hover:text-primary'
+    `inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-medium transition-colors duration-150 focus-visible:outline-none ${active
+      ? 'bg-[rgba(71,77,236,0.12)] text-[#a5b4fc]'
+      : 'text-secondary hover:bg-white/5 hover:text-primary'
     }`;
 
   return (
     <nav
       aria-label="Navigasi utama"
-      className={`sticky top-0 z-50 h-16 border-b border-border-subtle transition-colors duration-150 ${
-        scrolled
+      className={`sticky top-0 z-50 h-16 border-b border-border-subtle transition-colors duration-150 ${scrolled
           ? 'bg-canvas/95 shadow-xs backdrop-blur-md'
           : 'bg-canvas/85 backdrop-blur-md'
-      }`}
+        }`}
     >
       <div className="page-container-wide flex h-full items-center justify-between gap-4">
         <Link href="/" className="group inline-flex shrink-0 items-center gap-2.5 rounded-lg focus-visible:outline-none">
@@ -140,8 +138,11 @@ export default function Navbar() {
                 </span>
 
                 <button
-                  onClick={handleLogout}
-                  className="btn-danger-soft min-h-10 px-3 text-xs"
+                  onClick={async () => {
+                    await fetch('/api/auth/logout', { method: 'POST' });
+                    window.location.href = '/';
+                  }}
+                  className="text-sm font-medium text-[#A1A1AA] hover:text-[#FB7185] transition-colors"
                 >
                   Logout
                 </button>

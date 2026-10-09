@@ -1,57 +1,92 @@
-import { PrismaClient } from '@prisma/client';
 import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { generateToken } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
-
-const prisma = new PrismaClient();
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, email, password, role } = body;
+    const { name, email, password, confirmPassword } = body;
 
-    // 1. Validasi input dasar
+    // Validasi input
     if (!name || !email || !password) {
       return NextResponse.json(
-        { error: 'Nama, email, dan password wajib diisi!' },
+        { error: 'Name, email, and password are required.' },
         { status: 400 }
       );
     }
 
-    // 2. Cek apakah email sudah pernah terdaftar
+    if (password !== confirmPassword) {
+      return NextResponse.json(
+        { error: 'Passwords do not match.' },
+        { status: 400 }
+      );
+    }
+
+    if (password.length < 8) {
+      return NextResponse.json(
+        { error: 'Password must be at least 8 characters.' },
+        { status: 400 }
+      );
+    }
+
+    // Cek email sudah ada
     const existingUser = await prisma.user.findUnique({
       where: { email },
     });
+
     if (existingUser) {
       return NextResponse.json(
-        { error: 'Email sudah terdaftar. Gunakan email lain.' },
-        { status: 400 }
+        { error: 'Email already registered.' },
+        { status: 409 }
       );
     }
 
-    // 3. Acak password (Hashing) dengan salt rounds 10
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Hash password
+    const passwordHash = await bcrypt.hash(password, 12);
 
-    // 4. Simpan user baru ke database
-    const newUser = await prisma.user.create({
+    // Create user
+    const user = await prisma.user.create({
       data: {
         name,
         email,
-        password: hashedPassword,
-        role: role || 'CUSTOMER', // Default jadi CUSTOMER kalau nggak dikirm
+        password: passwordHash,
+        role: 'CUSTOMER',
       },
     });
 
-    // 5. Return data user TAPI tanpa password (demi keamanan)
-    const { password: _, ...userWithoutPassword } = newUser;
-    
-    return NextResponse.json(
-      { message: 'Register berhasil!', user: userWithoutPassword },
+    // Generate token
+    const token = await generateToken({
+      userId: user.id,
+      role: user.role,
+    });
+
+    // Set cookie
+    const response = NextResponse.json(
+      {
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
+      },
       { status: 201 }
     );
+
+    response.cookies.set('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 86400, // 1 hari
+      path: '/',
+    });
+
+    return response;
   } catch (error) {
     console.error('Register error:', error);
     return NextResponse.json(
-      { error: 'Terjadi kesalahan saat registrasi' },
+      { error: 'Internal server error.' },
       { status: 500 }
     );
   }

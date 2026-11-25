@@ -29,23 +29,37 @@ export default function CarDetailPage() {
   // Booking State
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const fetchCar = async () => {
+    const fetchCarAndUser = async () => {
       try {
-        const res = await fetch(`/api/cars/${id}`);
-        if (!res.ok) throw new Error('Car not found');
-        const data = await res.json();
-        setCar(data);
+        const [carRes, userRes] = await Promise.all([
+          fetch(`/api/cars/${id}`),
+          fetch('/api/auth/me', { credentials: 'include' }),
+        ]);
+
+        if (!carRes.ok) throw new Error('Car not found');
+        const carData = await carRes.json();
+        setCar(carData);
+
+        if (userRes.ok) {
+          const userData = await userRes.json();
+          if (userData?.user) {
+            setCustomerName(userData.user.name || '');
+            setCustomerPhone(userData.user.phone || '');
+          }
+        }
       } catch (err) {
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
-    fetchCar();
+    fetchCarAndUser();
   }, [id]);
 
   const calculateTotal = () => {
@@ -66,6 +80,10 @@ export default function CarDetailPage() {
       setError('Tanggal selesai harus setelah tanggal mulai.');
       return;
     }
+    if (!customerName.trim() || !customerPhone.trim()) {
+      setError('Nama lengkap dan nomor telepon wajib diisi.');
+      return;
+    }
 
     setIsSubmitting(true);
     setError('');
@@ -76,11 +94,18 @@ export default function CarDetailPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           carId: car?.id,
+          customerName: customerName.trim(),
+          customerPhone: customerPhone.trim(),
           startDate,
           endDate,
           totalPrice: calculateTotal(),
         }),
       });
+
+      if (res.status === 401) {
+        router.push(`/login?redirect=/cars/${id}`);
+        return;
+      }
 
       if (!res.ok) {
         const errData = await res.json();
@@ -88,8 +113,8 @@ export default function CarDetailPage() {
       }
 
       router.push('/my-bookings?success=true');
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Gagal membuat booking');
     } finally {
       setIsSubmitting(false);
     }
@@ -209,6 +234,7 @@ export default function CarDetailPage() {
                 <input 
                   id="start-date"
                   type="date" 
+                  min={new Date().toISOString().split('T')[0]}
                   value={startDate} 
                   onChange={(e) => setStartDate(e.target.value)}
                   className="field-control"
@@ -221,8 +247,35 @@ export default function CarDetailPage() {
                 <input 
                   id="end-date"
                   type="date" 
+                  min={startDate || new Date().toISOString().split('T')[0]}
                   value={endDate} 
                   onChange={(e) => setEndDate(e.target.value)}
+                  className="field-control"
+                />
+              </div>
+              <div>
+                <label htmlFor="customer-name" className="field-label">
+                  Nama Penyewa
+                </label>
+                <input
+                  id="customer-name"
+                  type="text"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  placeholder="Nama lengkap sesuai identitas"
+                  className="field-control"
+                />
+              </div>
+              <div>
+                <label htmlFor="customer-phone" className="field-label">
+                  Nomor Telepon
+                </label>
+                <input
+                  id="customer-phone"
+                  type="tel"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  placeholder="08123456789"
                   className="field-control"
                 />
               </div>

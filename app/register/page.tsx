@@ -8,6 +8,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
@@ -33,7 +34,7 @@ export default function RegisterPage() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, confirmPassword }),
+        body: JSON.stringify({ name, email, phone: phone.trim() || undefined, password, confirmPassword }),
       });
 
       const data = await res.json();
@@ -99,6 +100,19 @@ export default function RegisterPage() {
                 className="w-full bg-[#151922] border border-[rgba(255,255,255,0.10)] rounded-lg px-4 py-3 text-sm text-[#F8FAFC] placeholder:text-[#71717A] focus:outline-none focus:border-[#474DEC] focus:ring-2 focus:ring-[rgba(71,77,236,0.18)] transition-all"
                 placeholder="you@example.com"
                 required
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-[#A1A1AA] uppercase tracking-wider mb-2">
+                Phone Number (Optional)
+              </label>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="w-full bg-[#151922] border border-[rgba(255,255,255,0.10)] rounded-lg px-4 py-3 text-sm text-[#F8FAFC] placeholder:text-[#71717A] focus:outline-none focus:border-[#474DEC] focus:ring-2 focus:ring-[rgba(71,77,236,0.18)] transition-all"
+                placeholder="08123456789"
               />
             </div>
 

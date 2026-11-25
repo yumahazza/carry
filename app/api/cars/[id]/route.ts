@@ -1,27 +1,26 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
+import { PUBLIC_CAR_SELECT } from '@/lib/cars';
 
-const prisma = new PrismaClient();
-
-// GET: Mengambil detail 1 mobil berdasarkan ID
 export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> } // Next.js 15+ params adalah Promise
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
 
     const car = await prisma.car.findUnique({
       where: { id },
+      select: PUBLIC_CAR_SELECT,
     });
 
     if (!car) {
-      return NextResponse.json({ error: 'Mobil tidak ditemukan' }, { status: 404 });
+      return NextResponse.json({ error: 'Mobil tidak ditemukan.' }, { status: 404 });
     }
 
     return NextResponse.json(car);
   } catch (error) {
     console.error('Error fetching car:', error);
-    return NextResponse.json({ error: 'Gagal mengambil data mobil' }, { status: 500 });
+    return NextResponse.json({ error: 'Gagal mengambil data mobil.' }, { status: 500 });
   }
 }

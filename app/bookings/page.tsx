@@ -24,7 +24,7 @@ export default function BookingsPage() {
 
   const fetchBookings = async () => {
     try {
-      const res = await fetch('/api/bookings');
+      const res = await fetch('/api/admin/bookings', { credentials: 'include' });
       const data = await res.json();
       if (Array.isArray(data)) {
         setBookings(data);
@@ -50,16 +50,18 @@ export default function BookingsPage() {
   }, []);
 
   const handleStatusChange = async (bookingId: string, newStatus: string) => {
-    const res = await fetch(`/api/bookings/${bookingId}`, {
+    const res = await fetch(`/api/admin/bookings/${bookingId}/status`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ status: newStatus }),
     });
 
     if (res.ok) {
       fetchBookings();
     } else {
-      alert('Gagal mengubah status booking');
+      const data = await res.json().catch(() => null);
+      alert(data?.error || 'Gagal mengubah status booking');
     }
   };
 
@@ -73,7 +75,6 @@ export default function BookingsPage() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'CONFIRMED':
       case 'APPROVED':
         return 'bg-[#4ade80]/10 text-[#4ade80] border-[#4ade80]/20';
       case 'PENDING':
@@ -175,7 +176,8 @@ export default function BookingsPage() {
                           className="bg-[#141414] border border-white/10 text-xs text-[#f3f4f6] rounded-md px-2.5 py-1 focus:outline-none focus:border-[#474dec] focus:ring-1 focus:ring-[#474dec]/50 cursor-pointer"
                         >
                           <option value="PENDING">PENDING</option>
-                          <option value="CONFIRMED">CONFIRMED</option>
+                          <option value="APPROVED">APPROVED</option>
+                          <option value="REJECTED">REJECTED</option>
                           <option value="COMPLETED">COMPLETED</option>
                           <option value="CANCELLED">CANCELLED</option>
                         </select>

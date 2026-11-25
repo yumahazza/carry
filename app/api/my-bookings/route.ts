@@ -1,25 +1,24 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import { getCurrentUser } from '@/lib/auth';
-
-const prisma = new PrismaClient();
+import { requireUser } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
 export async function GET() {
-  try {
-    // 1. Cek siapa yang login
-    const user = await getCurrentUser();
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  const authCheck = await requireUser();
+  if (authCheck instanceof NextResponse) return authCheck;
+  const user = authCheck;
 
-    // 2. 🔥 AMBIL BOOKING HANYA BERDASARKAN userId
+  try {
     const bookings = await prisma.booking.findMany({
       where: {
-        userId: user.id, // Filter pakai ID, bukan email!
+        OR: [
+          { userId: user.id },
+          { userId: null, customerEmail: user.email },
+        ],
       },
       include: {
         car: {
           select: {
+            id: true,
             name: true,
             brand: true,
             pricePerDay: true,
@@ -35,6 +34,6 @@ export async function GET() {
     return NextResponse.json(bookings);
   } catch (error) {
     console.error('Error fetching my bookings:', error);
-    return NextResponse.json({ error: 'Gagal mengambil data booking' }, { status: 500 });
+    return NextResponse.json({ error: 'Gagal mengambil data booking.' }, { status: 500 });
   }
 }

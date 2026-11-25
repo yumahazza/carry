@@ -1,24 +1,20 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 
-// --- JWT Setup ---
 const secretKey = process.env.JWT_SECRET || 'fallback-secret-key-untuk-dev';
 const key = new TextEncoder().encode(secretKey);
 
-// --- Prisma Client (buat 1x saja di level module) ---
-const prisma = new PrismaClient();
-
-// --- Tipe Data User yang Aman ---
 export type SafeUser = {
   id: string;
   name: string;
   email: string;
   role: 'CUSTOMER' | 'ADMIN';
+  phone: string | null;
 };
 
-// --- Fungsi Membuat Token ---
+/** Generate a signed HS256 JWT session token valid for 1 day. */
 export async function generateToken(payload: { userId: string; role: string }) {
   return await new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
@@ -27,17 +23,17 @@ export async function generateToken(payload: { userId: string; role: string }) {
     .sign(key);
 }
 
-// --- Fungsi Verifikasi Token ---
+/** Verify a JWT session token and return its payload, or null if invalid. */
 export async function verifyToken(token: string) {
   try {
     const { payload } = await jwtVerify(token, key);
     return payload as { userId: string; role: string };
-  } catch (error) {
+  } catch {
     return null;
   }
 }
 
-// --- Fungsi Mendapatkan User yang Sedang Login ---
+/** Fetch the currently authenticated user without exposing the password hash. */
 export async function getCurrentUser(): Promise<SafeUser | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get('token')?.value;
@@ -49,30 +45,36 @@ export async function getCurrentUser(): Promise<SafeUser | null> {
 
   const user = await prisma.user.findUnique({
     where: { id: payload.userId },
-    select: { id: true, name: true, email: true, role: true },
+    select: { id: true, name: true, email: true, role: true, phone: true },
   });
 
   return user as SafeUser | null;
 }
 
-// --- GUARD: Wajib Login (Untuk Customer API) ---
+/** Guard for authenticated customer/admin routes. */
 export async function requireUser() {
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json(
-      { error: 'Unauthorized: Anda harus login terlebih dahulu.' },
+      { error: 'Anda harus masuk terlebih dahulu.' },
       { status: 401 }
     );
   }
   return user;
 }
 
-// --- GUARD: Wajib Admin (Untuk Admin API) ---
+/** Guard for admin-only routes. */
 export async function requireAdmin() {
   const user = await getCurrentUser();
-  if (!user || user.role !== 'ADMIN') {
+  if (!user) {
     return NextResponse.json(
-      { error: 'Forbidden: Akses ditolak. Hanya untuk Admin.' },
+      { error: 'Anda harus masuk terlebih dahulu.' },
+      { status: 401 }
+    );
+  }
+  if (user.role !== 'ADMIN') {
+    return NextResponse.json(
+      { error: 'Akses ditolak. Hanya untuk Admin.' },
       { status: 403 }
     );
   }

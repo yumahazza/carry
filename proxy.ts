@@ -1,53 +1,55 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { verifyToken } from '@/lib/auth';
 
-// DEFINISIKAN TIPE DI LEVEL MODULE (paling atas, di luar function)
 interface UserSession {
-  id: string
-  role: 'ADMIN' | 'CUSTOMER'
+  id: string;
+  role: 'ADMIN' | 'CUSTOMER';
 }
 
-export function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl
+export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
 
-  // PAKSA TIPE DENGAN TYPE ANNOTATION YANG EKSPLISIT
-  const user: UserSession | null = null
-
-  const sessionCookie = request.cookies.get('session_token')?.value
+  let user: UserSession | null = null;
+  const sessionCookie = request.cookies.get('token')?.value;
 
   if (sessionCookie) {
-    try {
-      // TODO: Implementasi verify session
-      // const decoded = verifyToken(sessionCookie)
-      // user = { id: decoded.id, role: decoded.role }
-    } catch (error) {
-      // Biarkan null
+    const decoded = await verifyToken(sessionCookie);
+    if (decoded && typeof decoded.userId === 'string' && (decoded.role === 'ADMIN' || decoded.role === 'CUSTOMER')) {
+      user = { id: decoded.userId, role: decoded.role };
     }
   }
 
-  // 16. Redirect Guest dari /my-bookings ke /login
+  // Proteksi halaman customer: guest diarahkan ke /login
   if (pathname.startsWith('/my-bookings') && !user) {
-    return NextResponse.redirect(new URL('/login', request.url))
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('redirect', pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
-  // 17. Redirect Customer dari /admin ke /my-bookings
-  // PAKSA CHECK DENGAN TYPE GUARD
-  if (pathname.startsWith('/admin') && user && (user as UserSession).role !== 'ADMIN') {
-    return NextResponse.redirect(new URL('/my-bookings', request.url))
-  }
-
-  // 6. Redirect /bookings ke route yang sesuai
-  if (pathname === '/bookings') {
-    if (user && (user as UserSession).role === 'ADMIN') {
-      return NextResponse.redirect(new URL('/admin/bookings', request.url))
-    } else if (user) {
-      return NextResponse.redirect(new URL('/my-bookings', request.url))
-    } else {
-      return NextResponse.redirect(new URL('/login', request.url))
+  // Proteksi halaman admin: guest ke /login, non-admin ke /my-bookings
+  if (pathname.startsWith('/admin')) {
+    if (!user) {
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+    if (user.role !== 'ADMIN') {
+      return NextResponse.redirect(new URL('/my-bookings', request.url));
     }
   }
 
-  return NextResponse.next()
+  // Proteksi route legacy /bookings
+  if (pathname === '/bookings') {
+    if (!user) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+    if (user.role !== 'ADMIN') {
+      return NextResponse.redirect(new URL('/my-bookings', request.url));
+    }
+  }
+
+  return NextResponse.next();
 }
 
 export const config = {
@@ -56,4 +58,4 @@ export const config = {
     '/admin/:path*',
     '/bookings',
   ],
-}
+};

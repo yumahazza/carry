@@ -8,7 +8,7 @@ interface Stats {
   availableCars: number;
   totalBookings: number;
   pendingBookings: number;
-  confirmedBookings: number;
+  approvedBookings: number;
   totalRevenue: number;
 }
 
@@ -116,7 +116,7 @@ export default function AdminDashboard() {
           <h2 className="mb-2 text-2xl font-bold tracking-tight tabular-nums text-primary sm:text-3xl">{stats.totalBookings}</h2>
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <span className="status-badge status-warning">{stats.pendingBookings} Pending</span>
-            <span className="status-badge status-success">{stats.confirmedBookings} Confirmed</span>
+            <span className="status-badge status-success">{stats.approvedBookings} Approved</span>
           </div>
         </div>
 
@@ -129,7 +129,7 @@ export default function AdminDashboard() {
           <h2 className="mb-1 truncate text-xl font-bold tracking-tight tabular-nums text-primary sm:text-2xl">
             Rp {stats.totalRevenue.toLocaleString('id-ID')}
           </h2>
-          <p className="text-xs text-secondary sm:text-sm">Confirmed &amp; Completed</p>
+          <p className="text-xs text-secondary sm:text-sm">Approved &amp; Completed</p>
         </div>
       </div>
 

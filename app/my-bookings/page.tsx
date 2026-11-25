@@ -9,7 +9,7 @@ interface Booking {
   startDate: string;
   endDate: string;
   totalPrice: number;
-  status: 'PENDING' | 'APPROVED' | 'CONFIRMED' | 'REJECTED' | 'COMPLETED' | 'CANCELLED';
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'COMPLETED' | 'CANCELLED';
   car: {
     id: string;
     name: string;
@@ -43,7 +43,6 @@ function MyBookingsContent() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'APPROVED':
-      case 'CONFIRMED':
         return 'status-success';
       case 'PENDING':
         return 'status-warning';
@@ -61,7 +60,6 @@ function MyBookingsContent() {
     const labels: Record<Booking['status'], string> = {
       PENDING: 'Pending',
       APPROVED: 'Approved',
-      CONFIRMED: 'Confirmed',
       REJECTED: 'Rejected',
       COMPLETED: 'Completed',
       CANCELLED: 'Cancelled',

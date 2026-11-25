@@ -8,48 +8,45 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { email, password } = body;
 
-    if (!email || !password) {
+    if (!email || !password || typeof email !== 'string' || typeof password !== 'string') {
       return NextResponse.json(
-        { error: 'Email and password are required.' },
+        { error: 'Email dan kata sandi wajib diisi.' },
         { status: 400 }
       );
     }
 
-    // Cari user
     const user = await prisma.user.findUnique({
-      where: { email },
+      where: { email: email.trim().toLowerCase() },
     });
 
     if (!user) {
       return NextResponse.json(
-        { error: 'Incorrect email or password.' },
+        { error: 'Email atau kata sandi salah.' },
         { status: 401 }
       );
     }
 
-    // Verify password
     const validPassword = await bcrypt.compare(password, user.password);
 
     if (!validPassword) {
       return NextResponse.json(
-        { error: 'Incorrect email or password.' },
+        { error: 'Email atau kata sandi salah.' },
         { status: 401 }
       );
     }
 
-    // Generate token
     const token = await generateToken({
       userId: user.id,
       role: user.role,
     });
 
-    // Set cookie
     const response = NextResponse.json({
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
         role: user.role,
+        phone: user.phone,
       },
     });
 
@@ -65,7 +62,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json(
-      { error: 'Internal server error.' },
+      { error: 'Terjadi kesalahan pada server.' },
       { status: 500 }
     );
   }

@@ -1,10 +1,9 @@
-import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { generateToken, verifyToken } from '@/lib/jwt';
 
-const secretKey = process.env.JWT_SECRET || 'fallback-secret-key-untuk-dev';
-const key = new TextEncoder().encode(secretKey);
+export { generateToken, verifyToken };
 
 export type SafeUser = {
   id: string;
@@ -13,25 +12,6 @@ export type SafeUser = {
   role: 'CUSTOMER' | 'ADMIN';
   phone: string | null;
 };
-
-/** Generate a signed HS256 JWT session token valid for 1 day. */
-export async function generateToken(payload: { userId: string; role: string }) {
-  return await new SignJWT(payload)
-    .setProtectedHeader({ alg: 'HS256' })
-    .setIssuedAt()
-    .setExpirationTime('1d')
-    .sign(key);
-}
-
-/** Verify a JWT session token and return its payload, or null if invalid. */
-export async function verifyToken(token: string) {
-  try {
-    const { payload } = await jwtVerify(token, key);
-    return payload as { userId: string; role: string };
-  } catch {
-    return null;
-  }
-}
 
 /** Fetch the currently authenticated user without exposing the password hash. */
 export async function getCurrentUser(): Promise<SafeUser | null> {

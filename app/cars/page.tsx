@@ -1,177 +1,288 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import CarCard, { type CarSummary } from '@/components/CarCard';
 
-interface Car {
-  id: string;
-  name: string;
-  brand: string;
-  year: number;
-  pricePerDay: number;
-  isAvailable: boolean;
-  image?: string;
-}
+type AvailabilityFilter = 'all' | 'available' | 'rented';
+type SortOption = 'newest' | 'price_asc' | 'price_desc';
 
 export default function CarsPage() {
-  const [cars, setCars] = useState<Car[]>([]);
+  const [cars, setCars] = useState<CarSummary[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'available' | 'unavailable'>('all');
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    const fetchCars = async () => {
-      try {
-        const res = await fetch('/api/cars');
-        const data = await res.json();
-        if (Array.isArray(data)) {
-          setCars(data);
-        }
-      } catch (error) {
-        console.error('Gagal fetch cars:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchCars();
+  const [search, setSearch] = useState('');
+  const [availability, setAvailability] = useState<AvailabilityFilter>('all');
+  const [brandFilter, setBrandFilter] = useState('all');
+  const [sortBy, setSortBy] = useState<SortOption>('newest');
+
+  const [reloadTick, setReloadTick] = useState(0);
+
+  const handleReload = useCallback(() => {
+    setLoading(true);
+    setError('');
+    setReloadTick((t) => t + 1);
   }, []);
 
-  const filteredCars = cars.filter((car) => {
-    if (filter === 'available') return car.isAvailable;
-    if (filter === 'unavailable') return !car.isAvailable;
-    return true;
-  });
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/cars');
+        if (!res.ok) {
+          throw new Error('Gagal memuat daftar armada.');
+        }
+        const data = await res.json();
+        if (!cancelled && Array.isArray(data)) {
+          setCars(data);
+        }
+      } catch {
+        if (!cancelled) {
+          setError('Gagal memuat daftar armada. Periksa koneksi jaringan Anda lalu coba lagi.');
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [reloadTick]);
+
+  const brands = useMemo(() => {
+    const unique = Array.from(new Set(cars.map((c) => c.brand.trim()).filter(Boolean)));
+    return unique.sort((a, b) => a.localeCompare(b, 'id'));
+  }, [cars]);
+
+  const filteredCars = useMemo(() => {
+    const keyword = search.trim().toLowerCase();
+    const result = cars.filter((car) => {
+      if (availability === 'available' && !car.isAvailable) return false;
+      if (availability === 'rented' && car.isAvailable) return false;
+      if (brandFilter !== 'all' && car.brand.toLowerCase() !== brandFilter.toLowerCase()) {
+        return false;
+      }
+      if (keyword) {
+        const matchName = car.name.toLowerCase().includes(keyword);
+        const matchBrand = car.brand.toLowerCase().includes(keyword);
+        if (!matchName && !matchBrand) return false;
+      }
+      return true;
+    });
+
+    if (sortBy === 'price_asc') {
+      return [...result].sort((a, b) => a.pricePerDay - b.pricePerDay);
+    }
+    if (sortBy === 'price_desc') {
+      return [...result].sort((a, b) => b.pricePerDay - a.pricePerDay);
+    }
+    return result;
+  }, [cars, search, availability, brandFilter, sortBy]);
+
+  const hasActiveFilter =
+    search.trim() !== '' ||
+    availability !== 'all' ||
+    brandFilter !== 'all' ||
+    sortBy !== 'newest';
+
+  const resetFilters = () => {
+    setSearch('');
+    setAvailability('all');
+    setBrandFilter('all');
+    setSortBy('newest');
+  };
 
   return (
-    <div className="pb-12 pt-10 sm:pb-16 sm:pt-12">
-      <div className="page-container">
-        {/* Header */}
-        <div className="mb-7">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Fleet Directory</p>
-          <h1 className="mb-2 text-3xl font-bold tracking-tight text-primary sm:text-4xl">Daftar Mobil</h1>
-          <p className="max-w-2xl text-sm leading-relaxed text-secondary sm:text-base">Pilih armada berkualitas untuk perjalanan bisnis maupun liburan Anda.</p>
-        </div>
+    <div className="pb-14 pt-8 sm:pb-20 sm:pt-10">
+      {/* Page Header (DSG §17.1) */}
+      <div className="page-container pb-6">
+        <h1 className="font-display text-3xl font-bold tracking-[-0.02em] text-primary sm:text-4xl">
+          Daftar Mobil
+        </h1>
+        <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-secondary">
+          Bandingkan ketersediaan, spesifikasi kabin, dan tarif sewa harian untuk menentukan unit yang paling sesuai.
+        </p>
+        {!loading && !error && (
+          <p aria-live="polite" className="mt-2 text-sm text-muted">
+            Menampilkan <span className="tabular-nums font-semibold text-primary">{filteredCars.length}</span>{' '}
+            dari <span className="tabular-nums">{cars.length}</span> mobil
+          </p>
+        )}
+      </div>
 
-        {/* Filter */}
-        <div role="group" aria-label="Filter ketersediaan armada" className="mb-7 flex flex-wrap gap-2">
-          <button
-            onClick={() => setFilter('all')}
-            aria-pressed={filter === 'all'}
-            className={`min-h-11 rounded-lg px-4 text-sm font-medium transition-colors focus-visible:outline-none ${
-              filter === 'all'
-                ? 'border border-[rgba(71,77,236,0.30)] bg-[rgba(71,77,236,0.12)] text-[#a5b4fc]'
-                : 'border border-border-default bg-white/[0.04] text-secondary hover:border-border-strong hover:bg-white/[0.08] hover:text-primary'
-            }`}
-          >
-            Semua ({cars.length})
-          </button>
-          <button
-            onClick={() => setFilter('available')}
-            aria-pressed={filter === 'available'}
-            className={`min-h-11 rounded-lg px-4 text-sm font-medium transition-colors focus-visible:outline-none ${
-              filter === 'available'
-                ? 'border border-[rgba(52,211,153,0.28)] bg-[rgba(52,211,153,0.12)] text-success'
-                : 'border border-border-default bg-white/[0.04] text-secondary hover:border-border-strong hover:bg-white/[0.08] hover:text-primary'
-            }`}
-          >
-            Tersedia ({cars.filter((c) => c.isAvailable).length})
-          </button>
-          <button
-            onClick={() => setFilter('unavailable')}
-            aria-pressed={filter === 'unavailable'}
-            className={`min-h-11 rounded-lg px-4 text-sm font-medium transition-colors focus-visible:outline-none ${
-              filter === 'unavailable'
-                ? 'border border-[rgba(251,113,133,0.28)] bg-[rgba(251,113,133,0.12)] text-danger'
-                : 'border border-border-default bg-white/[0.04] text-secondary hover:border-border-strong hover:bg-white/[0.08] hover:text-primary'
-            }`}
-          >
-            Tidak Tersedia ({cars.filter((c) => !c.isAvailable).length})
-          </button>
-        </div>
+      {/* Filter Toolbar (DSG §17.2: sticky di desktop, normal flow di mobile agar tidak memakan layar) */}
+      <div className="border-y border-border-subtle bg-[color-mix(in_srgb,var(--canvas)_92%,transparent)] py-3 lg:sticky lg:top-16 lg:z-20 lg:backdrop-blur-md">
+        <div className="page-container flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center">
+          {/* Search Input */}
+          <div className="relative min-w-0 flex-1 lg:min-w-[240px]">
+            <label htmlFor="car-search-input" className="sr-only">
+              Cari nama atau merek mobil
+            </label>
+            <svg
+              aria-hidden="true"
+              className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <circle cx="11" cy="11" r="7" />
+              <path strokeLinecap="round" d="M20 20l-3.5-3.5" />
+            </svg>
+            <input
+              id="car-search-input"
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Cari nama atau merek mobil..."
+              className="field-control pl-10"
+            />
+          </div>
 
-        {/* Grid */}
+          {/* Segmented Availability Control (DSG §11.9) */}
+          <div
+            role="group"
+            aria-label="Filter status ketersediaan"
+            className="inline-flex flex-wrap items-center gap-1 rounded-[10px] border border-border-control bg-surface p-1"
+          >
+            {(
+              [
+                { id: 'all', label: 'Semua' },
+                { id: 'available', label: 'Available' },
+                { id: 'rented', label: 'Rented' },
+              ] as const
+            ).map((tab) => {
+              const active = availability === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setAvailability(tab.id)}
+                  aria-pressed={active}
+                  className={`min-h-9 flex-1 rounded-lg px-3 text-[13px] transition-colors sm:flex-none ${
+                    active
+                      ? 'bg-brand-soft font-semibold text-text-brand'
+                      : 'font-medium text-secondary hover:text-primary'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Selects Row */}
+          <div className="grid grid-cols-2 gap-2.5 sm:flex sm:items-center">
+            <div>
+              <label htmlFor="car-brand-select" className="sr-only">
+                Filter berdasarkan merek
+              </label>
+              <select
+                id="car-brand-select"
+                value={brandFilter}
+                onChange={(e) => setBrandFilter(e.target.value)}
+                className="field-control py-2 text-sm sm:w-44"
+              >
+                <option value="all">Semua Merek</option>
+                {brands.map((b) => (
+                  <option key={b} value={b}>
+                    {b}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="car-sort-select" className="sr-only">
+                Urutkan daftar mobil
+              </label>
+              <select
+                id="car-sort-select"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                className="field-control py-2 text-sm sm:w-44"
+              >
+                <option value="newest">Terbaru</option>
+                <option value="price_asc">Harga Terendah</option>
+                <option value="price_desc">Harga Tertinggi</option>
+              </select>
+            </div>
+          </div>
+
+          {hasActiveFilter && (
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="btn-ghost btn-sm self-start lg:self-auto"
+            >
+              Reset Filter
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Results Grid (DSG §17.3 - §17.7) */}
+      <div className="page-container pt-6">
         {loading ? (
-          <div aria-label="Memuat daftar armada" aria-live="polite" aria-busy="true" className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }, (_, index) => (
-              <div key={index} className="overflow-hidden rounded-xl border border-border-subtle bg-surface">
+          <div
+            aria-label="Memuat daftar mobil"
+            aria-live="polite"
+            aria-busy="true"
+            className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
+          >
+            {Array.from({ length: 6 }, (_, idx) => (
+              <div key={idx} className="surface-card overflow-hidden p-0">
                 <div className="skeleton aspect-[16/10] rounded-none" />
                 <div className="space-y-3 p-5">
                   <div className="skeleton h-5 w-3/5" />
                   <div className="skeleton h-4 w-2/5" />
-                  <div className="skeleton mt-5 h-5 w-1/2" />
+                  <div className="skeleton mt-4 h-6 w-1/3" />
                 </div>
               </div>
             ))}
           </div>
+        ) : error ? (
+          <div
+            role="alert"
+            className="alert-box alert-danger flex-col sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div>
+              <p className="font-semibold">Gagal memuat daftar armada.</p>
+              <p className="mt-0.5 text-sm text-secondary">{error}</p>
+            </div>
+            <button type="button" onClick={handleReload} className="btn-secondary shrink-0">
+              Coba Lagi
+            </button>
+          </div>
+        ) : cars.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-border-control bg-surface px-6 py-14 text-center sm:py-16">
+            <h2 className="font-display text-lg font-semibold text-primary">
+              Belum ada armada yang terdaftar
+            </h2>
+            <p className="mx-auto mt-2 max-w-md text-sm text-secondary">
+              Unit mobil akan tampil di katalog ini segera setelah ditambahkan oleh tim operasional.
+            </p>
+            <button type="button" onClick={handleReload} className="btn-secondary mt-5">
+              Muat Ulang Data
+            </button>
+          </div>
         ) : filteredCars.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border-default bg-surface/50 px-5 py-14 text-center">
-            <h2 className="text-lg font-semibold text-primary">Tidak ada mobil yang cocok dengan filter ini.</h2>
-            <p className="mx-auto mt-2 max-w-md text-sm text-secondary">Coba ubah pilihan ketersediaan untuk melihat armada lainnya.</p>
-            <button
-              onClick={() => setFilter('all')}
-              className="btn-secondary mt-5"
-            >
+          <div className="rounded-xl border border-dashed border-border-control bg-surface px-6 py-14 text-center sm:py-16">
+            <h2 className="font-display text-lg font-semibold text-primary">
+              Tidak ada mobil yang cocok
+            </h2>
+            <p className="mx-auto mt-2 max-w-md text-sm text-secondary">
+              Coba ubah kata kunci pencarian, merek, atau filter ketersediaan untuk melihat armada lainnya.
+            </p>
+            <button type="button" onClick={resetFilters} className="btn-secondary mt-5">
               Reset Filter
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredCars.map((car) => (
-              <Link
-                key={car.id}
-                href={`/cars/${car.id}`}
-                className="interactive-card group flex flex-col overflow-hidden rounded-xl border border-border-subtle bg-surface focus-visible:outline-none"
-              >
-                <div className="relative flex aspect-[16/10] items-center justify-center overflow-hidden bg-surface-raised">
-                  {car.image ? (
-                    <img
-                      src={car.image}
-                      alt={car.name}
-                      className="h-full w-full object-cover transition-transform duration-[260ms] group-hover:scale-[1.03]"
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center justify-center text-muted">
-                      <svg aria-hidden="true" className="h-12 w-12 fill-none stroke-current stroke-[1.5]" viewBox="0 0 24 24">
-                        <path d="M5 17h14v-4l-2-6H7L5 13v4zM5 17a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm14 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM7 13h10" />
-                      </svg>
-                      <span className="mt-2 text-xs uppercase tracking-wider">No Image</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex flex-1 flex-col justify-between p-5">
-                  <div>
-                    <div className="mb-1.5 flex items-start justify-between gap-2">
-                      <h3 className="truncate text-lg font-semibold tracking-tight text-primary">
-                        {car.name}
-                      </h3>
-                      <span
-                        className={`status-badge shrink-0 ${
-                          car.isAvailable
-                            ? 'status-success'
-                            : 'status-danger'
-                        }`}
-                      >
-                        {car.isAvailable ? 'Available' : 'Rented'}
-                      </span>
-                    </div>
-                    <p className="text-sm text-secondary">
-                      {car.brand} • {car.year}
-                    </p>
-                  </div>
-
-                  <div className="mt-5 flex items-baseline justify-between border-t border-border-subtle pt-4">
-                    <div>
-                      <span className="tabular-nums text-xl font-bold text-primary">
-                        Rp {car.pricePerDay.toLocaleString('id-ID')}
-                      </span>
-                      <span className="ml-1 text-sm text-muted">/hari</span>
-                    </div>
-                    <span className="text-sm font-medium text-[#a5b4fc] group-hover:underline group-hover:underline-offset-4">
-                      Detail &rarr;
-                    </span>
-                  </div>
-                </div>
-              </Link>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredCars.map((car, index) => (
+              <CarCard key={car.id} car={car} priority={index < 3} />
             ))}
           </div>
         )}

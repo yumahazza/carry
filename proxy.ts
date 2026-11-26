@@ -15,7 +15,11 @@ export async function proxy(request: NextRequest) {
 
   if (sessionCookie) {
     const decoded = await verifyToken(sessionCookie);
-    if (decoded && typeof decoded.userId === 'string' && (decoded.role === 'ADMIN' || decoded.role === 'CUSTOMER')) {
+    if (
+      decoded &&
+      typeof decoded.userId === 'string' &&
+      (decoded.role === 'ADMIN' || decoded.role === 'CUSTOMER')
+    ) {
       user = { id: decoded.userId, role: decoded.role };
     }
   }
@@ -39,23 +43,20 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // Proteksi route legacy /bookings
+  // Sinkronisasi route legacy /bookings sesuai PRD §7.1 & §7.2
   if (pathname === '/bookings') {
     if (!user) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
-    if (user.role !== 'ADMIN') {
-      return NextResponse.redirect(new URL('/my-bookings', request.url));
+    if (user.role === 'ADMIN') {
+      return NextResponse.redirect(new URL('/admin/bookings', request.url));
     }
+    return NextResponse.redirect(new URL('/my-bookings', request.url));
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: [
-    '/my-bookings/:path*',
-    '/admin/:path*',
-    '/bookings',
-  ],
+  matcher: ['/my-bookings/:path*', '/admin/:path*', '/bookings'],
 };
